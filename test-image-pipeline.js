@@ -219,3 +219,4 @@ for (const fx of effects) {
 console.log('\n-----------------------------------------------------------');
 console.log(`SUMMARY: ${passedTests} / ${totalTests} test cases passed (100% success rate).`);
 console.log('-----------------------------------------------------------');
+

@@ -8,3 +8,5 @@ export * from './BlurEngine';
 export * from './ColorPipeline';
 export * from './PostEffectsPipeline';
 export * from './BackgroundProcessor';
+export * from './MaskingEngine';
+

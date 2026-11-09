@@ -34,6 +34,8 @@ import {
 } from '../rendering-modes';
 import { PostProcessingEngine } from '../image-processing/PostProcessingEngine';
 import { BackgroundProcessor } from '../image-processing/BackgroundProcessor';
+import { MaskingEngine } from '../image-processing/MaskingEngine';
+import { LightingEngine } from '../lighting-engine/LightingEngine';
 
 export class CanvasPipeline {
   private targetCanvas: HTMLCanvasElement | null = null;
@@ -209,7 +211,28 @@ export class CanvasPipeline {
       this.targetCtx.putImageData(workingImageData, 0, 0);
     }
 
-    // 6. Apply post-raster effects (bloom, vignette, scanlines, grain, aberration, glitch)
+    // 6. Apply Selective Alpha/Luma Masking (revealing original photograph)
+    if (config.mask && config.mask.enabled) {
+      MaskingEngine.applyMask(
+        this.targetCtx,
+        targetWidth,
+        targetHeight,
+        sourceImage,
+        config.mask
+      );
+    }
+
+    // 7. Apply Multi-Point Lighting Engine
+    if (config.lighting && config.lighting.enabled) {
+      LightingEngine.applyLighting(
+        this.targetCtx,
+        targetWidth,
+        targetHeight,
+        config.lighting
+      );
+    }
+
+    // 8. Apply post-raster effects (bloom, vignette, scanlines, grain, aberration, glitch, dust, halftone, pixelation)
     PostProcessingEngine.applyPostEffects(
       this.targetCtx,
       targetWidth,

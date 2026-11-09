@@ -6,7 +6,6 @@ import {
   Palette,
   Layers,
   Sparkles,
-  Zap,
   Info,
   Droplets,
 } from 'lucide-react';
@@ -14,6 +13,9 @@ import { Slider } from '../ui';
 import { useStudioStore, BUILTIN_PALETTES } from '../../stores';
 import { RenderMode, BlurType, OverlayBlendMode, BackgroundMode } from '../../types';
 import { ASCII_GLYPH_PRESETS } from '../../rendering-modes/AsciiRenderer';
+import { MotionLabSection } from './MotionLabSection';
+import { LightingLabSection } from './LightingLabSection';
+import { MaskingLabSection } from './MaskingLabSection';
 import { cn } from '../../utilities';
 
 interface InspectorSectionProps {
@@ -97,7 +99,6 @@ export const InspectorPanel: React.FC = () => {
     updateBlurConfig,
     updateBackgroundConfig,
     updateEffectsConfig,
-    updateMotionConfig,
     updateAsciiConfig,
     updateDitherConfig,
     updateMosaicConfig,
@@ -111,6 +112,8 @@ export const InspectorPanel: React.FC = () => {
     resetBackgroundSection,
     resetEffectsSection,
     resetMotionSection,
+    resetLightingSection,
+    resetMaskSection,
   } = useStudioStore();
 
   const allModesList: { id: RenderMode; label: string; group: string }[] = [
@@ -786,86 +789,26 @@ export const InspectorPanel: React.FC = () => {
           />
         </InspectorSection>
 
-        {/* 6. MOTION SECTION */}
-        <InspectorSection
-          id="motion"
-          title="Motion"
-          icon={<Zap className="w-4 h-4" />}
+        {/* 6. MOTION LAB SECTION */}
+        <MotionLabSection
           isOpen={!collapsedSections.motion}
           onToggle={() => toggleSection('motion')}
           onReset={resetMotionSection}
-          badge={config.motion.isPlaying ? 'ACTIVE' : undefined}
-        >
-          {/* Animation Toggle */}
-          <div className="flex items-center justify-between pb-1">
-            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-              Live Motion Engine
-            </span>
-            <button
-              onClick={() => updateMotionConfig({ isPlaying: !config.motion.isPlaying })}
-              className={cn(
-                'px-2.5 py-1 font-mono text-2xs uppercase rounded-xs border transition-colors',
-                config.motion.isPlaying
-                  ? 'border-acid-lime text-acid-lime bg-acid-lime/10 shadow-active-lime'
-                  : 'border-obsidian-border text-obsidian-muted hover:text-white'
-              )}
-            >
-              {config.motion.isPlaying ? 'Running (60FPS)' : 'Paused'}
-            </button>
-          </div>
+        />
 
-          {/* Animation Style */}
-          <div className="space-y-2">
-            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-              Oscillation Waveform
-            </label>
-            <div className="grid grid-cols-2 gap-1.5">
-              {(['none', 'scanline', 'sine-wave', 'glitch', 'matrix-rain', 'pulse'] as const).map(
-                (type) => (
-                  <button
-                    key={type}
-                    onClick={() =>
-                      updateMotionConfig({
-                        type,
-                        isPlaying: type !== 'none',
-                      })
-                    }
-                    className={cn(
-                      'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-left truncate transition-colors',
-                      config.motion.type === type
-                        ? 'border-electric-violet text-electric-violet-light bg-electric-violet/10'
-                        : 'border-obsidian-border text-obsidian-muted hover:text-white'
-                    )}
-                  >
-                    {type}
-                  </button>
-                )
-              )}
-            </div>
-          </div>
+        {/* 7. LIGHTING LAB SECTION */}
+        <LightingLabSection
+          isOpen={!collapsedSections.lighting}
+          onToggle={() => toggleSection('lighting')}
+          onReset={resetLightingSection}
+        />
 
-          <Slider
-            label="Motion Speed"
-            value={config.motion.speed}
-            min={0.2}
-            max={3.0}
-            step={0.1}
-            unit="x"
-            accentColor="violet"
-            onChange={(val) => updateMotionConfig({ speed: val })}
-          />
-
-          <Slider
-            label="Motion Intensity"
-            value={config.motion.intensity}
-            min={0.1}
-            max={2.0}
-            step={0.1}
-            unit="x"
-            accentColor="violet"
-            onChange={(val) => updateMotionConfig({ intensity: val })}
-          />
-        </InspectorSection>
+        {/* 8. MASKING LAB SECTION */}
+        <MaskingLabSection
+          isOpen={!collapsedSections.mask}
+          onToggle={() => toggleSection('mask')}
+          onReset={resetMaskSection}
+        />
       </div>
     </aside>
   );

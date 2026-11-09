@@ -177,3 +177,4 @@ export class ColorPipeline {
     return imageData;
   }
 }
+

@@ -335,3 +335,4 @@ export class PostEffectsPipeline {
     ctx.restore();
   }
 }
+

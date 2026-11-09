@@ -11,6 +11,9 @@ import {
   EffectsConfig,
   GeneralRenderParams,
   BlurConfig,
+  LightingConfig,
+  LightPoint,
+  MaskConfig,
 } from '../types';
 import { SidebarTab } from '../types/studio';
 
@@ -90,6 +93,38 @@ export const DEFAULT_EFFECTS_CONFIG: EffectsConfig = {
   halftone: 0,
   pixelation: 0,
   filmDust: 0,
+};
+
+export const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
+  enabled: false,
+  ambient: 0.35,
+  lights: [
+    {
+      id: 'light-1',
+      x: 0.3,
+      y: 0.3,
+      radius: 0.45,
+      intensity: 0.85,
+      color: '#FFFFFF',
+    },
+    {
+      id: 'light-2',
+      x: 0.7,
+      y: 0.6,
+      radius: 0.35,
+      intensity: 0.75,
+      color: '#CCFF00',
+    },
+  ],
+};
+
+export const DEFAULT_MASK_CONFIG: MaskConfig = {
+  enabled: false,
+  maskCanvas: null,
+  maskMetadata: null,
+  invert: false,
+  feather: 0,
+  opacity: 1.0,
 };
 
 export const DEFAULT_LAYERS: StudioLayer[] = [
@@ -175,15 +210,21 @@ export const DEFAULT_CONFIG: RenderConfig = {
     sharpness: 1,
   },
   motion: {
+    animated: false,
     isPlaying: false,
+    animSpeed: 1,
     speed: 1,
-    loop: true,
-    type: 'none',
+    animStyle: 'wave',
+    type: 'wave',
+    animIntensity: 0.5,
     intensity: 0.5,
+    loop: true,
     frequency: 1,
     currentTime: 0,
     duration: 10,
   },
+  lighting: DEFAULT_LIGHTING_CONFIG,
+  mask: DEFAULT_MASK_CONFIG,
   palette: BUILTIN_PALETTES[0],
 };
 
@@ -237,6 +278,14 @@ interface StudioState {
   updateMosaicConfig: (partial: Partial<RenderConfig['mosaic']>) => void;
   updateHalftoneConfig: (partial: Partial<RenderConfig['halftone']>) => void;
   updateMotionConfig: (partial: Partial<RenderConfig['motion']>) => void;
+  updateLightingConfig: (partial: Partial<LightingConfig>) => void;
+  toggleLighting: () => void;
+  addLight: (light?: Partial<LightPoint>) => void;
+  removeLight: (id: string) => void;
+  updateLight: (id: string, partial: Partial<LightPoint>) => void;
+  setMaskImage: (canvas: HTMLCanvasElement, metadata: { name: string; width: number; height: number }) => void;
+  clearMaskImage: () => void;
+  updateMaskConfig: (partial: Partial<MaskConfig>) => void;
   setPalette: (palette: PalettePreset) => void;
 
   // Section Resets
@@ -246,6 +295,8 @@ interface StudioState {
   resetBackgroundSection: () => void;
   resetEffectsSection: () => void;
   resetMotionSection: () => void;
+  resetLightingSection: () => void;
+  resetMaskSection: () => void;
   resetAll: () => void;
 
   // Actions - Layers
@@ -291,6 +342,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     background: true,
     effects: true,
     motion: true,
+    lighting: true,
+    mask: true,
   },
   historyPast: [],
   historyFuture: [],
@@ -437,12 +490,149 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     })),
 
   updateMotionConfig: (partial) =>
+    set((state) => {
+      const motion = { ...state.config.motion, ...partial };
+      // Keep aliases in sync
+      if (partial.animated !== undefined) motion.isPlaying = partial.animated;
+      if (partial.isPlaying !== undefined) motion.animated = partial.isPlaying;
+      if (partial.animSpeed !== undefined) motion.speed = partial.animSpeed;
+      if (partial.speed !== undefined) motion.animSpeed = partial.speed;
+      if (partial.animStyle !== undefined) motion.type = partial.animStyle;
+      if (partial.type !== undefined) motion.animStyle = partial.type;
+      if (partial.animIntensity !== undefined) motion.intensity = partial.animIntensity;
+      if (partial.intensity !== undefined) motion.animIntensity = partial.intensity;
+      return {
+        config: {
+          ...state.config,
+          motion,
+        },
+      };
+    }),
+
+  updateLightingConfig: (partial) =>
     set((state) => ({
       config: {
         ...state.config,
-        motion: { ...state.config.motion, ...partial },
+        lighting: {
+          ...(state.config.lighting || DEFAULT_LIGHTING_CONFIG),
+          ...partial,
+        },
       },
     })),
+
+  toggleLighting: () =>
+    set((state) => {
+      const cur = state.config.lighting || DEFAULT_LIGHTING_CONFIG;
+      return {
+        config: {
+          ...state.config,
+          lighting: { ...cur, enabled: !cur.enabled },
+        },
+      };
+    }),
+
+  addLight: (light) =>
+    set((state) => {
+      const cur = state.config.lighting || DEFAULT_LIGHTING_CONFIG;
+      const newLight: LightPoint = {
+        id: `light-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        x: 0.5,
+        y: 0.5,
+        radius: 0.35,
+        intensity: 0.8,
+        color: '#FFFFFF',
+        ...light,
+      };
+      return {
+        config: {
+          ...state.config,
+          lighting: {
+            ...cur,
+            enabled: true,
+            lights: [...cur.lights, newLight],
+          },
+        },
+      };
+    }),
+
+  removeLight: (id) =>
+    set((state) => {
+      const cur = state.config.lighting || DEFAULT_LIGHTING_CONFIG;
+      return {
+        config: {
+          ...state.config,
+          lighting: {
+            ...cur,
+            lights: cur.lights.filter((l) => l.id !== id),
+          },
+        },
+      };
+    }),
+
+  updateLight: (id, partial) =>
+    set((state) => {
+      const cur = state.config.lighting || DEFAULT_LIGHTING_CONFIG;
+      return {
+        config: {
+          ...state.config,
+          lighting: {
+            ...cur,
+            lights: cur.lights.map((l) => (l.id === id ? { ...l, ...partial } : l)),
+          },
+        },
+      };
+    }),
+
+  resetLightingSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, lighting: DEFAULT_LIGHTING_CONFIG },
+    }));
+  },
+
+  setMaskImage: (canvas, metadata) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        mask: {
+          ...(state.config.mask || DEFAULT_MASK_CONFIG),
+          enabled: true,
+          maskCanvas: canvas,
+          maskMetadata: metadata,
+        },
+      },
+    })),
+
+  clearMaskImage: () =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        mask: {
+          ...(state.config.mask || DEFAULT_MASK_CONFIG),
+          enabled: false,
+          maskCanvas: null,
+          maskMetadata: null,
+        },
+      },
+    })),
+
+  updateMaskConfig: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        mask: {
+          ...(state.config.mask || DEFAULT_MASK_CONFIG),
+          ...partial,
+        },
+      },
+    })),
+
+  resetMaskSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, mask: DEFAULT_MASK_CONFIG },
+    }));
+  },
 
   setPalette: (palette) =>
     set((state) => ({ config: { ...state.config, palette } })),

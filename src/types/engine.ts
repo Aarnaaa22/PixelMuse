@@ -164,15 +164,60 @@ export interface GeneralRenderParams {
   charSet: string;      // custom ASCII glyph ramp
 }
 
+export type AnimationStyle =
+  | 'wave'
+  | 'pulse'
+  | 'shimmer'
+  | 'ripple'
+  | 'flicker'
+  // Legacy aliases
+  | 'none'
+  | 'scanline'
+  | 'sine-wave'
+  | 'glitch'
+  | 'matrix-rain';
+
 export interface AnimationMotionConfig {
-  isPlaying: boolean;
-  speed: number;
+  animated?: boolean;            // Master animation toggle
+  isPlaying: boolean;            // Backward-compatible alias
+  animSpeed?: number;            // Speed factor (0.1 to 3)
+  speed: number;                 // Backward-compatible alias
+  animStyle?: AnimationStyle;    // wave, pulse, shimmer, ripple, flicker
+  type: AnimationStyle;          // Backward-compatible alias
+  animIntensity?: number;        // Intensity (0 to 1)
+  intensity: number;             // Backward-compatible alias
   loop: boolean;
-  type: 'none' | 'scanline' | 'sine-wave' | 'glitch' | 'matrix-rain' | 'pulse';
-  intensity: number;
   frequency: number;
-  currentTime?: number; // seconds
-  duration?: number;    // seconds (default 10)
+  currentTime?: number;          // seconds
+  duration?: number;             // seconds
+}
+
+export interface LightPoint {
+  id: string;
+  x: number;          // Normalized 0 to 1
+  y: number;          // Normalized 0 to 1
+  radius: number;     // Normalized 0 to 1 (or px)
+  intensity: number;  // 0 to 1
+  color?: string;     // Hex color (e.g. #FFFFFF, #CCFF00)
+}
+
+export interface LightingConfig {
+  enabled: boolean;
+  ambient: number;    // Ambient base illumination (0 to 1)
+  lights: LightPoint[];
+}
+
+export interface MaskConfig {
+  enabled: boolean;
+  maskCanvas: HTMLCanvasElement | null;
+  maskMetadata?: {
+    name: string;
+    width: number;
+    height: number;
+  } | null;
+  invert: boolean;
+  feather: number;    // Feather blur radius (0 to 40 px)
+  opacity: number;    // Reveal opacity (0 to 1)
 }
 
 export interface StudioLayer {
@@ -198,6 +243,8 @@ export interface RenderConfig {
   mosaic: MosaicConfig;
   halftone: HalftoneConfig;
   motion: AnimationMotionConfig;
+  lighting?: LightingConfig;
+  mask?: MaskConfig;
   palette: PalettePreset;
 }
 

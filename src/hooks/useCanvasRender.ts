@@ -10,7 +10,6 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
     config,
     sourceImage,
     setStats,
-    updateMotionConfig,
   } = useStudioStore();
 
   // Initialize pipeline
@@ -57,13 +56,14 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
   useAnimationFrame((time) => {
     if (sourceImage) {
       const dur = config.motion.duration ?? 10;
+      const speed = config.motion.animSpeed ?? config.motion.speed ?? 1;
+      const scaledTime = time * speed;
       const loopedTime = config.motion.loop
-        ? time % dur
-        : Math.min(dur, time);
-      updateMotionConfig({ currentTime: loopedTime });
+        ? scaledTime % dur
+        : Math.min(dur, scaledTime);
       renderFrame(loopedTime);
     }
-  }, config.motion.isPlaying);
+  }, Boolean(config.motion.isPlaying || config.motion.animated));
 
   return {
     renderFrame,
