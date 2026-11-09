@@ -48,3 +48,23 @@ export interface CreationRecord {
   config: RenderConfig;
   exportFormat: ExportFormat;
 }
+
+export interface StudioProject {
+  id: string;
+  title: string;
+  config: RenderConfig;
+  createdAt: number;
+  updatedAt: number;
+  thumbnail?: string;
+  userId?: string | null;
+  syncedWithSupabase?: boolean;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl?: string;
+  createdAt: number;
+}
+

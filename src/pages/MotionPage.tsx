@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, ArrowRight, Activity } from 'lucide-react';
 import { Button, Badge } from '../components/ui';
+import { SiteFooter } from '../components/common';
 import { useMotionStore, useStudioStore } from '../stores';
 import { AnimationMotionConfig } from '../types';
 
@@ -105,7 +106,8 @@ export const MotionPage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 bg-obsidian px-6 py-12 max-w-7xl mx-auto w-full select-none">
+    <div className="flex-1 flex flex-col bg-obsidian select-none">
+      <div className="flex-1 px-6 py-12 max-w-7xl mx-auto w-full">
       {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-obsidian-border">
         <div className="space-y-2">
@@ -205,5 +207,7 @@ export const MotionPage: React.FC = () => {
         ))}
       </div>
     </div>
+    <SiteFooter />
+  </div>
   );
 };

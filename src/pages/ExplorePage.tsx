@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUpRight, Search } from 'lucide-react';
 import { Button, Badge } from '../components/ui';
+import { SiteFooter } from '../components/common';
 import { useExploreStore, useStudioStore } from '../stores';
 import { ArtPreset } from '../types';
 import { CanvasPipeline } from '../rendering-engine';
@@ -57,12 +58,17 @@ export const ExplorePage: React.FC = () => {
   const setProjectName = useStudioStore((s) => s.setProjectName);
 
   const categories = [
-    { id: 'all', label: 'All Archives' },
-    { id: 'mosaic', label: 'Mosaic' },
-    { id: 'pixel', label: 'Pixel' },
+    { id: 'all', label: 'All Presets' },
+    { id: 'dots', label: 'Dots / Bloom' },
     { id: 'ascii', label: 'ASCII' },
-    { id: 'dots', label: 'Dots' },
+    { id: 'crosses', label: 'Neon Crosses' },
+    { id: 'pixel', label: 'Pixels' },
+    { id: 'contour', label: 'Monochrome' },
+    { id: 'hexagons', label: 'Acid Geometry' },
     { id: 'dither', label: 'Dither' },
+    { id: 'mosaic', label: 'Mosaic / Glitch' },
+    { id: 'matrix-rain', label: 'Matrix' },
+    { id: 'rings', label: 'Kinetic Rings' },
   ];
 
   const filteredPresets = presets.filter((p) => {
@@ -83,7 +89,8 @@ export const ExplorePage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 bg-obsidian px-6 py-12 max-w-7xl mx-auto w-full select-none">
+    <div className="flex-1 flex flex-col bg-obsidian select-none">
+      <div className="flex-1 px-6 py-12 max-w-7xl mx-auto w-full">
       {/* Editorial Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-obsidian-border">
         <div className="space-y-2">
@@ -191,5 +198,7 @@ export const ExplorePage: React.FC = () => {
         ))}
       </div>
     </div>
+    <SiteFooter />
+  </div>
   );
 };
