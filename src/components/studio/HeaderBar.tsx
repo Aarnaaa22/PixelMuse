@@ -11,7 +11,7 @@ interface HeaderBarProps {
 export const HeaderBar: React.FC<HeaderBarProps> = ({ onOpenExport }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { onFileInputChange } = useImageDrop();
-  const { isSplitView, toggleSplitView, resetConfig, resetViewport } = useStudioStore();
+  const { isSplitView, toggleSplitView, resetAll, resetViewport } = useStudioStore();
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -63,7 +63,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ onOpenExport }) => {
         <Button
           variant="ghost"
           size="xs"
-          onClick={resetConfig}
+          onClick={resetAll}
           className="text-obsidian-muted hover:text-signal-coral"
         >
           Reset Params

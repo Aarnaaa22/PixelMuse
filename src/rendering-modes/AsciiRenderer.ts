@@ -4,6 +4,15 @@ import { ImageDataProcessor } from '../image-processing';
 import { MotionEcosystem } from '../animation-engine';
 import { quantizer } from '../image-processing/ColorQuantizer';
 
+export const ASCII_GLYPH_PRESETS = [
+  { id: 'standard', name: 'Standard Density', chars: ' .:-=+*#%@' },
+  { id: 'dense-blocks', name: 'Dense Shader Blocks', chars: ' ·:;░▒▓█' },
+  { id: 'matrix-katakana', name: 'Matrix Katakana', chars: ' ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ' },
+  { id: 'math-scientific', name: 'Math / Scientific', chars: ' ·°+×÷=≈≠≤≥∞' },
+  { id: 'minimal-stipple', name: 'Minimal Stippling', chars: ' · : * #' },
+  { id: 'binary', name: 'Binary Raw', chars: ' 01' },
+];
+
 export class AsciiRenderer extends BaseRenderer {
   readonly mode: RenderMode = 'ascii';
 
@@ -83,6 +92,9 @@ export class AsciiRenderer extends BaseRenderer {
             palette.colors
           );
           ctx.fillStyle = `rgb(${quantized.r}, ${quantized.g}, ${quantized.b})`;
+        } else if (ascii.colorMode === 'gradient') {
+          const t = r / Math.max(1, rows - 1);
+          ctx.fillStyle = t > 0.5 ? '#CCFF00' : '#9D4EDD';
         } else {
           ctx.fillStyle = ascii.monochromeColor;
         }
@@ -94,5 +106,44 @@ export class AsciiRenderer extends BaseRenderer {
 
     ctx.restore();
   }
-}
 
+  /**
+   * Generates pure UTF-8 monospace text representation of the image
+   */
+  static generateText(source: ImageData, config: RenderConfig): string {
+    const { ascii } = config;
+    const { width, height } = source;
+    const chars = ascii.characters || ' .:-=+*#%@';
+    const charLen = chars.length;
+    const fontSize = Math.max(6, ascii.fontSize);
+    const stepX = fontSize * 0.6;
+    const stepY = fontSize;
+
+    const cols = Math.floor(width / stepX);
+    const rows = Math.floor(height / stepY);
+    const lumMap = ImageDataProcessor.extractLuminanceMap(
+      source,
+      ascii.brightness,
+      ascii.contrast
+    );
+
+    const lines: string[] = [];
+    for (let r = 0; r < rows; r++) {
+      let line = '';
+      const sampleY = Math.min(height - 1, Math.floor(r * stepY + stepY * 0.5));
+
+      for (let c = 0; c < cols; c++) {
+        const sampleX = Math.min(width - 1, Math.floor(c * stepX + stepX * 0.5));
+        const pixelIdx = sampleY * width + sampleX;
+        let lum = lumMap[pixelIdx];
+        if (ascii.invert) lum = 1 - lum;
+
+        const charIdx = Math.min(charLen - 1, Math.max(0, Math.floor(lum * charLen)));
+        line += chars[charIdx] || ' ';
+      }
+      lines.push(line);
+    }
+
+    return lines.join('\n');
+  }
+}

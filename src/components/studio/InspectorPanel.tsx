@@ -1,247 +1,314 @@
 import React from 'react';
-import { Sliders, Palette, Zap, Image as ImageIcon } from 'lucide-react';
-import { Slider, TabGroup } from '../ui';
+import {
+  ChevronDown,
+  RotateCcw,
+  Sliders,
+  Palette,
+  Layers,
+  Sparkles,
+  Zap,
+  Info,
+} from 'lucide-react';
+import { Slider } from '../ui';
 import { useStudioStore, BUILTIN_PALETTES } from '../../stores';
+import { RenderMode } from '../../types';
+import { ASCII_GLYPH_PRESETS } from '../../rendering-modes/AsciiRenderer';
 import { cn } from '../../utilities';
+
+interface InspectorSectionProps {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  onReset: () => void;
+  badge?: string;
+  children: React.ReactNode;
+}
+
+const InspectorSection: React.FC<InspectorSectionProps> = ({
+  title,
+  icon,
+  isOpen,
+  onToggle,
+  onReset,
+  badge,
+  children,
+}) => {
+  return (
+    <div className="border-b border-obsidian-border bg-obsidian-surface">
+      {/* Section Header Accordion Trigger */}
+      <div className="flex items-center justify-between p-3.5 hover:bg-obsidian-subtle/50 transition-colors select-none">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2.5 flex-1 text-left focus:outline-none"
+        >
+          <span className="text-acid-lime shrink-0">{icon}</span>
+          <span className="font-mono text-xs uppercase font-semibold text-white tracking-wider">
+            {title}
+          </span>
+          {badge && (
+            <span className="font-mono text-[9px] px-1.5 py-0.2 bg-obsidian-950 border border-obsidian-border text-obsidian-muted uppercase rounded-xs">
+              {badge}
+            </span>
+          )}
+        </button>
+
+        <div className="flex items-center gap-1">
+          {/* Per-section Reset Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onReset();
+            }}
+            title={`Reset ${title} Parameters to Defaults`}
+            className="p-1 text-obsidian-muted hover:text-signal-coral rounded-xs transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+          </button>
+
+          <button
+            onClick={onToggle}
+            className="p-1 text-obsidian-muted hover:text-white rounded-xs transition-colors"
+          >
+            <ChevronDown
+              className={cn(
+                'w-3.5 h-3.5 transition-transform duration-200',
+                isOpen ? 'rotate-180' : ''
+              )}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Collapsible Content */}
+      {isOpen && <div className="p-4 pt-1 space-y-5 border-t border-obsidian-border/50">{children}</div>}
+    </div>
+  );
+};
 
 export const InspectorPanel: React.FC = () => {
   const {
     config,
-    activeInspectorTab,
-    setActiveInspectorTab,
+    setMode,
+    updateRenderParams,
+    updateColorConfig,
+    updateBackgroundConfig,
+    updateEffectsConfig,
+    updateMotionConfig,
     updateAsciiConfig,
     updateDitherConfig,
     updateMosaicConfig,
     updateHalftoneConfig,
-    updateConfig,
     setPalette,
+    collapsedSections,
+    toggleSection,
+    resetRenderSection,
+    resetColorSection,
+    resetBackgroundSection,
+    resetEffectsSection,
+    resetMotionSection,
   } = useStudioStore();
 
-  const tabs = [
-    { id: 'render' as const, label: 'Mode', icon: <Sliders className="w-3.5 h-3.5" /> },
-    { id: 'palette' as const, label: 'Color', icon: <Palette className="w-3.5 h-3.5" /> },
-    { id: 'motion' as const, label: 'Motion', icon: <Zap className="w-3.5 h-3.5" /> },
-    { id: 'export' as const, label: 'Input', icon: <ImageIcon className="w-3.5 h-3.5" /> },
+  const modes: { id: RenderMode; label: string }[] = [
+    { id: 'ascii', label: 'ASCII' },
+    { id: 'dither', label: 'Dither' },
+    { id: 'pixel-mosaic', label: 'Mosaic' },
+    { id: 'halftone', label: 'Halftone' },
   ];
 
   return (
-    <aside className="w-80 h-full bg-obsidian-surface border-l border-obsidian-border flex flex-col z-20 overflow-hidden">
-      {/* Tab Navigation */}
-      <div className="px-3 pt-3">
-        <TabGroup
-          tabs={tabs}
-          activeId={activeInspectorTab}
-          onChange={(tab) => setActiveInspectorTab(tab)}
-          variant="pill"
-          className="w-full justify-between"
-        />
+    <aside className="w-80 h-full bg-obsidian-surface border-l border-obsidian-border flex flex-col z-20 overflow-hidden select-none">
+      {/* Inspector Title Bar */}
+      <div className="h-10 px-4 bg-obsidian-950 border-b border-obsidian-border flex items-center justify-between">
+        <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted font-semibold">
+          Studio Inspector
+        </span>
+        <span className="font-mono text-2xs text-acid-lime uppercase">
+          {config.mode.toUpperCase()}
+        </span>
       </div>
 
-      {/* Tab Content Panel */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {activeInspectorTab === 'render' && (
-          <div className="space-y-6">
-            <div className="pb-3 border-b border-obsidian-border flex items-center justify-between">
-              <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Parameters
-              </span>
-              <span className="font-mono text-2xs text-acid-lime uppercase">
-                {config.mode}
+      {/* Accordion Sections Scroll Area */}
+      <div className="flex-1 overflow-y-auto">
+        {/* 1. RENDER SECTION */}
+        <InspectorSection
+          id="render"
+          title="Render"
+          icon={<Sliders className="w-4 h-4" />}
+          isOpen={!collapsedSections.render}
+          onToggle={() => toggleSection('render')}
+          onReset={resetRenderSection}
+          badge={config.mode}
+        >
+          {/* Render Mode Selector Tabs */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Engine Pipeline
+              </label>
+              <span title="Select active raster engine">
+                <Info className="w-3 h-3 text-obsidian-muted" />
               </span>
             </div>
 
-            {/* ASCII Mode Controls */}
-            {config.mode === 'ascii' && (
-              <div className="space-y-5">
-                <Slider
-                  label="Font Size"
-                  value={config.ascii.fontSize}
-                  min={6}
-                  max={28}
-                  step={1}
-                  unit="px"
-                  onChange={(fontSize) => updateAsciiConfig({ fontSize, lineHeight: fontSize })}
-                />
+            <div className="grid grid-cols-4 gap-1 p-1 bg-obsidian-950 border border-obsidian-border rounded-xs">
+              {modes.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setMode(m.id)}
+                  className={cn(
+                    'py-1.5 text-2xs font-mono uppercase tracking-wider rounded-xs text-center transition-colors',
+                    config.mode === m.id
+                      ? 'bg-obsidian-surface border border-acid-lime/50 text-white font-semibold'
+                      : 'text-obsidian-muted hover:text-white'
+                  )}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                <Slider
-                  label="Contrast"
-                  value={config.ascii.contrast}
-                  min={-50}
-                  max={80}
-                  step={2}
-                  onChange={(contrast) => updateAsciiConfig({ contrast })}
-                />
+          {/* Cell Size */}
+          <Slider
+            label="Cell Size"
+            value={config.renderParams.cellSize}
+            min={4}
+            max={48}
+            step={1}
+            unit="px"
+            onChange={(val) => {
+              updateRenderParams({ cellSize: val });
+              updateAsciiConfig({ fontSize: val, lineHeight: val });
+              updateMosaicConfig({ cellSize: val });
+              updateHalftoneConfig({ dotSize: val });
+            }}
+          />
 
-                <Slider
-                  label="Brightness"
-                  value={config.ascii.brightness}
-                  min={-50}
-                  max={50}
-                  step={1}
-                  onChange={(brightness) => updateAsciiConfig({ brightness })}
-                />
+          {/* Density */}
+          <Slider
+            label="Sampling Density"
+            value={config.renderParams.density}
+            min={0.2}
+            max={2.0}
+            step={0.1}
+            unit="x"
+            onChange={(val) => updateRenderParams({ density: val })}
+          />
 
-                <Slider
-                  label="Glow Radius"
-                  value={config.ascii.glow}
-                  min={0}
-                  max={20}
-                  step={1}
-                  unit="px"
-                  accentColor="violet"
-                  onChange={(glow) => updateAsciiConfig({ glow })}
-                />
+          {/* Coverage */}
+          <Slider
+            label="Raster Coverage"
+            value={config.renderParams.coverage}
+            min={10}
+            max={100}
+            step={5}
+            unit="%"
+            onChange={(val) => updateRenderParams({ coverage: val })}
+          />
 
-                <div className="space-y-2 pt-2 border-t border-obsidian-border">
-                  <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                    Glyph Ramp
-                  </label>
-                  <input
-                    type="text"
-                    value={config.ascii.characters}
-                    onChange={(e) => updateAsciiConfig({ characters: e.target.value })}
-                    className="w-full bg-obsidian-950 border border-obsidian-border px-3 py-1.5 font-mono text-xs text-acid-lime focus:outline-none focus:border-acid-lime"
-                  />
-                </div>
+          {/* Edge Emphasis */}
+          <Slider
+            label="Edge Emphasis"
+            value={config.renderParams.edgeEmphasis}
+            min={0}
+            max={100}
+            step={5}
+            unit="%"
+            accentColor="violet"
+            onChange={(val) => updateRenderParams({ edgeEmphasis: val })}
+          />
 
-                <div className="flex items-center justify-between pt-2">
-                  <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                    Invert Luminance
-                  </span>
+          {/* Invert Direction */}
+          <div className="flex items-center justify-between pt-1">
+            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Invert Luminance
+            </span>
+            <button
+              onClick={() => {
+                const next = !config.renderParams.invert;
+                updateRenderParams({ invert: next });
+                updateAsciiConfig({ invert: next });
+              }}
+              className={cn(
+                'px-2.5 py-1 font-mono text-2xs uppercase rounded-xs border transition-colors',
+                config.renderParams.invert
+                  ? 'border-acid-lime text-acid-lime bg-acid-lime/10'
+                  : 'border-obsidian-border text-obsidian-muted hover:text-white'
+              )}
+            >
+              {config.renderParams.invert ? 'Inverted' : 'Normal'}
+            </button>
+          </div>
+
+          {/* Mode-Specific Extras */}
+          {config.mode === 'ascii' && (
+            <div className="space-y-2 pt-2 border-t border-obsidian-border">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Glyph Ramp Preset
+              </label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {ASCII_GLYPH_PRESETS.map((preset) => (
                   <button
-                    onClick={() => updateAsciiConfig({ invert: !config.ascii.invert })}
+                    key={preset.id}
+                    onClick={() => updateAsciiConfig({ characters: preset.chars })}
                     className={cn(
-                      'px-2.5 py-1 text-2xs font-mono uppercase rounded-xs border',
-                      config.ascii.invert
-                        ? 'border-acid-lime text-acid-lime bg-acid-lime/10'
-                        : 'border-obsidian-border text-obsidian-muted'
+                      'p-1.5 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-left truncate',
+                      config.ascii.characters === preset.chars
+                        ? 'border-acid-lime text-white bg-obsidian-950'
+                        : 'border-obsidian-border text-obsidian-muted hover:text-white'
                     )}
                   >
-                    {config.ascii.invert ? 'Inverted' : 'Normal'}
+                    {preset.name}
                   </button>
-                </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Dither Mode Controls */}
-            {config.mode === 'dither' && (
-              <div className="space-y-5">
-                <div className="space-y-2">
-                  <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                    Dither Algorithm
-                  </label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {(['bayer-4x4', 'bayer-8x8'] as const).map((algo) => (
-                      <button
-                        key={algo}
-                        onClick={() => updateDitherConfig({ algorithm: algo })}
-                        className={cn(
-                          'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-left',
-                          config.dither.algorithm === algo
-                            ? 'border-acid-lime text-white bg-obsidian-subtle'
-                            : 'border-obsidian-border text-obsidian-muted hover:text-white'
-                        )}
-                      >
-                        {algo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <Slider
-                  label="Dither Scale"
-                  value={config.dither.scale}
-                  min={1}
-                  max={6}
-                  step={1}
-                  unit="x"
-                  onChange={(scale) => updateDitherConfig({ scale })}
-                />
+          {config.mode === 'dither' && (
+            <div className="space-y-2 pt-2 border-t border-obsidian-border">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Dither Algorithm
+              </label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(['atkinson', 'bayer-8x8', 'floyd-steinberg', 'bayer-4x4'] as const).map(
+                  (algo) => (
+                    <button
+                      key={algo}
+                      onClick={() => updateDitherConfig({ algorithm: algo })}
+                      className={cn(
+                        'p-1.5 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-left truncate',
+                        config.dither.algorithm === algo
+                          ? 'border-acid-lime text-white bg-obsidian-950'
+                          : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                      )}
+                    >
+                      {algo}
+                    </button>
+                  )
+                )}
               </div>
-            )}
+            </div>
+          )}
+        </InspectorSection>
 
-            {/* Pixel Mosaic Mode Controls */}
-            {config.mode === 'pixel-mosaic' && (
-              <div className="space-y-5">
-                <Slider
-                  label="Cell Size"
-                  value={config.mosaic.cellSize}
-                  min={4}
-                  max={36}
-                  step={1}
-                  unit="px"
-                  onChange={(cellSize) => updateMosaicConfig({ cellSize })}
-                />
-
-                <Slider
-                  label="Cell Gap"
-                  value={config.mosaic.gap}
-                  min={0}
-                  max={8}
-                  step={1}
-                  unit="px"
-                  onChange={(gap) => updateMosaicConfig({ gap })}
-                />
-
-                <div className="space-y-2">
-                  <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                    Tile Geometry
-                  </label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {(['square', 'circle', 'diamond'] as const).map((shape) => (
-                      <button
-                        key={shape}
-                        onClick={() => updateMosaicConfig({ shape })}
-                        className={cn(
-                          'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-center',
-                          config.mosaic.shape === shape
-                            ? 'border-acid-lime text-white bg-obsidian-subtle'
-                            : 'border-obsidian-border text-obsidian-muted hover:text-white'
-                        )}
-                      >
-                        {shape}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Halftone Mode Controls */}
-            {config.mode === 'halftone' && (
-              <div className="space-y-5">
-                <Slider
-                  label="Screen Dot Size"
-                  value={config.halftone.dotSize}
-                  min={6}
-                  max={32}
-                  step={1}
-                  unit="px"
-                  onChange={(dotSize) => updateHalftoneConfig({ dotSize })}
-                />
-
-                <Slider
-                  label="Screen Angle"
-                  value={config.halftone.angle}
-                  min={0}
-                  max={90}
-                  step={5}
-                  unit="°"
-                  onChange={(angle) => updateHalftoneConfig({ angle })}
-                />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Palette Tab */}
-        {activeInspectorTab === 'palette' && (
-          <div className="space-y-4">
-            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted block pb-2 border-b border-obsidian-border">
-              Curated Studio Palettes
-            </span>
-
-            <div className="space-y-2.5">
+        {/* 2. COLOR SECTION */}
+        <InspectorSection
+          id="color"
+          title="Color"
+          icon={<Palette className="w-4 h-4" />}
+          isOpen={!collapsedSections.color}
+          onToggle={() => toggleSection('color')}
+          onReset={resetColorSection}
+        >
+          {/* Active Palette Picker */}
+          <div className="space-y-2">
+            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Studio Palette
+            </label>
+            <div className="space-y-1.5">
               {BUILTIN_PALETTES.map((pal) => {
                 const isSelected = config.palette.id === pal.id;
                 return (
@@ -249,29 +316,18 @@ export const InspectorPanel: React.FC = () => {
                     key={pal.id}
                     onClick={() => setPalette(pal)}
                     className={cn(
-                      'w-full p-3 text-left border rounded-xs transition-all flex flex-col gap-2',
+                      'w-full p-2 text-left border rounded-xs transition-all flex items-center justify-between',
                       isSelected
-                        ? 'border-acid-lime bg-obsidian-subtle shadow-crisp-border'
-                        : 'border-obsidian-border bg-obsidian-surface hover:border-obsidian-border-hover'
+                        ? 'border-acid-lime bg-obsidian-950'
+                        : 'border-obsidian-border bg-obsidian-950 hover:border-obsidian-border-hover'
                     )}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs uppercase font-medium text-white">
-                        {pal.name}
-                      </span>
-                      <span className="font-mono text-2xs text-obsidian-muted uppercase">
-                        {pal.category}
-                      </span>
-                    </div>
-
-                    <div className="flex h-4 w-full border border-obsidian-border overflow-hidden">
-                      {pal.colors.map((color, i) => (
-                        <div
-                          key={i}
-                          className="flex-1 h-full"
-                          style={{ backgroundColor: color }}
-                          title={color}
-                        />
+                    <span className="font-mono text-2xs uppercase text-white font-medium">
+                      {pal.name}
+                    </span>
+                    <div className="flex h-2.5 w-16 border border-obsidian-border overflow-hidden">
+                      {pal.colors.map((c, i) => (
+                        <div key={i} className="flex-1 h-full" style={{ backgroundColor: c }} />
                       ))}
                     </div>
                   </button>
@@ -279,34 +335,266 @@ export const InspectorPanel: React.FC = () => {
               })}
             </div>
           </div>
-        )}
 
-        {/* Motion Tab */}
-        {activeInspectorTab === 'motion' && (
-          <div className="space-y-5">
-            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted block pb-2 border-b border-obsidian-border">
-              Parametric Oscillators
+          <Slider
+            label="Brightness"
+            value={config.color.brightness}
+            min={-50}
+            max={50}
+            step={1}
+            onChange={(val) => {
+              updateColorConfig({ brightness: val });
+              updateAsciiConfig({ brightness: val });
+            }}
+          />
+
+          <Slider
+            label="Contrast"
+            value={config.color.contrast}
+            min={-50}
+            max={80}
+            step={1}
+            onChange={(val) => {
+              updateColorConfig({ contrast: val });
+              updateAsciiConfig({ contrast: val });
+            }}
+          />
+
+          <Slider
+            label="Saturation"
+            value={config.color.saturation}
+            min={0}
+            max={3}
+            step={0.1}
+            unit="x"
+            onChange={(val) => updateColorConfig({ saturation: val })}
+          />
+
+          {/* Grayscale Toggle */}
+          <div className="flex items-center justify-between pt-1">
+            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Grayscale Sensor
             </span>
+            <button
+              onClick={() => updateColorConfig({ grayscale: !config.color.grayscale })}
+              className={cn(
+                'px-2.5 py-1 font-mono text-2xs uppercase rounded-xs border transition-colors',
+                config.color.grayscale
+                  ? 'border-white text-white bg-white/10'
+                  : 'border-obsidian-border text-obsidian-muted hover:text-white'
+              )}
+            >
+              {config.color.grayscale ? 'Monochrome' : 'Full Spectrum'}
+            </button>
+          </div>
 
-            <div className="space-y-2">
-              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Motion Wave Form
-              </label>
-              <div className="grid grid-cols-2 gap-1.5">
-                {(['none', 'scanline', 'sine-wave', 'glitch'] as const).map((type) => (
+          {/* Tint & Tint Opacity */}
+          <div className="space-y-2 pt-2 border-t border-obsidian-border">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Chromatic Tint
+              </span>
+              <div className="flex items-center gap-1.5">
+                {['#CCFF00', '#9D4EDD', '#FF473A', '#33E533', '#FFB833'].map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => updateColorConfig({ tintColor: c })}
+                    className={cn(
+                      'w-3.5 h-3.5 rounded-xs border',
+                      config.color.tintColor === c ? 'border-white scale-110' : 'border-transparent'
+                    )}
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <Slider
+              label="Tint Opacity"
+              value={config.color.tintOpacity}
+              min={0}
+              max={1}
+              step={0.05}
+              unit="x"
+              onChange={(val) => updateColorConfig({ tintOpacity: val })}
+            />
+          </div>
+        </InspectorSection>
+
+        {/* 3. BACKGROUND SECTION */}
+        <InspectorSection
+          id="background"
+          title="Background"
+          icon={<Layers className="w-4 h-4" />}
+          isOpen={!collapsedSections.background}
+          onToggle={() => toggleSection('background')}
+          onReset={resetBackgroundSection}
+        >
+          <div className="space-y-2">
+            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Background Mode
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {(['solid', 'transparent', 'source-blur', 'grid'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => updateBackgroundConfig({ mode })}
+                  className={cn(
+                    'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-center transition-colors',
+                    config.background.mode === mode
+                      ? 'border-acid-lime text-white bg-obsidian-950 font-semibold'
+                      : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                  )}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Slider
+            label="Background Opacity"
+            value={config.background.opacity}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            onChange={(val) => updateBackgroundConfig({ opacity: val })}
+          />
+
+          <Slider
+            label="Background Blur"
+            value={config.background.blur}
+            min={0}
+            max={40}
+            step={1}
+            unit="px"
+            onChange={(val) => updateBackgroundConfig({ blur: val })}
+          />
+        </InspectorSection>
+
+        {/* 4. EFFECTS SECTION */}
+        <InspectorSection
+          id="effects"
+          title="Effects"
+          icon={<Sparkles className="w-4 h-4" />}
+          isOpen={!collapsedSections.effects}
+          onToggle={() => toggleSection('effects')}
+          onReset={resetEffectsSection}
+        >
+          <Slider
+            label="Bloom Glow"
+            value={config.effects.bloom}
+            min={0}
+            max={30}
+            step={1}
+            unit="px"
+            accentColor="violet"
+            onChange={(val) => {
+              updateEffectsConfig({ bloom: val });
+              updateAsciiConfig({ glow: val });
+            }}
+          />
+
+          <Slider
+            label="Vignette"
+            value={config.effects.vignette}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            onChange={(val) => updateEffectsConfig({ vignette: val })}
+          />
+
+          <Slider
+            label="CRT Scanlines"
+            value={config.effects.scanlines}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            onChange={(val) => updateEffectsConfig({ scanlines: val })}
+          />
+
+          <Slider
+            label="Film Grain"
+            value={config.effects.filmGrain}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            onChange={(val) => updateEffectsConfig({ filmGrain: val })}
+          />
+
+          <Slider
+            label="Chromatic Aberration"
+            value={config.effects.chromaticAberration}
+            min={0}
+            max={16}
+            step={1}
+            unit="px"
+            accentColor="coral"
+            onChange={(val) => updateEffectsConfig({ chromaticAberration: val })}
+          />
+
+          <Slider
+            label="Signal Glitch"
+            value={config.effects.glitch}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            accentColor="coral"
+            onChange={(val) => updateEffectsConfig({ glitch: val })}
+          />
+        </InspectorSection>
+
+        {/* 5. MOTION SECTION */}
+        <InspectorSection
+          id="motion"
+          title="Motion"
+          icon={<Zap className="w-4 h-4" />}
+          isOpen={!collapsedSections.motion}
+          onToggle={() => toggleSection('motion')}
+          onReset={resetMotionSection}
+          badge={config.motion.isPlaying ? 'ACTIVE' : undefined}
+        >
+          {/* Animation Toggle */}
+          <div className="flex items-center justify-between pb-1">
+            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Live Motion Engine
+            </span>
+            <button
+              onClick={() => updateMotionConfig({ isPlaying: !config.motion.isPlaying })}
+              className={cn(
+                'px-2.5 py-1 font-mono text-2xs uppercase rounded-xs border transition-colors',
+                config.motion.isPlaying
+                  ? 'border-acid-lime text-acid-lime bg-acid-lime/10 shadow-active-lime'
+                  : 'border-obsidian-border text-obsidian-muted hover:text-white'
+              )}
+            >
+              {config.motion.isPlaying ? 'Running (60FPS)' : 'Paused'}
+            </button>
+          </div>
+
+          {/* Animation Style */}
+          <div className="space-y-2">
+            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Oscillation Waveform
+            </label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {(['none', 'scanline', 'sine-wave', 'glitch', 'matrix-rain', 'pulse'] as const).map(
+                (type) => (
                   <button
                     key={type}
                     onClick={() =>
-                      updateConfig({
-                        motion: {
-                          ...config.motion,
-                          type,
-                          isPlaying: type !== 'none',
-                        },
+                      updateMotionConfig({
+                        type,
+                        isPlaying: type !== 'none',
                       })
                     }
                     className={cn(
-                      'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-left',
+                      'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-left truncate transition-colors',
                       config.motion.type === type
                         ? 'border-electric-violet text-electric-violet-light bg-electric-violet/10'
                         : 'border-obsidian-border text-obsidian-muted hover:text-white'
@@ -314,61 +602,34 @@ export const InspectorPanel: React.FC = () => {
                   >
                     {type}
                   </button>
-                ))}
-              </div>
+                )
+              )}
             </div>
-
-            <Slider
-              label="Wave Intensity"
-              value={config.motion.intensity}
-              min={0.1}
-              max={2.0}
-              step={0.1}
-              accentColor="violet"
-              onChange={(intensity) =>
-                updateConfig({
-                  motion: { ...config.motion, intensity },
-                })
-              }
-            />
-
-            <Slider
-              label="Speed Multiplier"
-              value={config.motion.speed}
-              min={0.2}
-              max={3.0}
-              step={0.1}
-              unit="x"
-              accentColor="violet"
-              onChange={(speed) =>
-                updateConfig({
-                  motion: { ...config.motion, speed },
-                })
-              }
-            />
           </div>
-        )}
 
-        {/* Input & Output Config Tab */}
-        {activeInspectorTab === 'export' && (
-          <div className="space-y-5">
-            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted block pb-2 border-b border-obsidian-border">
-              Pipeline Raster Scaling
-            </span>
+          <Slider
+            label="Motion Speed"
+            value={config.motion.speed}
+            min={0.2}
+            max={3.0}
+            step={0.1}
+            unit="x"
+            accentColor="violet"
+            onChange={(val) => updateMotionConfig({ speed: val })}
+          />
 
-            <Slider
-              label="Pipeline Resolution"
-              value={config.resolutionScale}
-              min={0.5}
-              max={2.0}
-              step={0.25}
-              unit="x"
-              onChange={(resolutionScale) => updateConfig({ resolutionScale })}
-            />
-          </div>
-        )}
+          <Slider
+            label="Motion Intensity"
+            value={config.motion.intensity}
+            min={0.1}
+            max={2.0}
+            step={0.1}
+            unit="x"
+            accentColor="violet"
+            onChange={(val) => updateMotionConfig({ intensity: val })}
+          />
+        </InspectorSection>
       </div>
     </aside>
   );
 };
-

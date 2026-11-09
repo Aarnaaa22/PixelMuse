@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  HeaderBar,
-  ModeSelector,
+  TopToolbar,
+  LeftSidebar,
   CanvasStage,
   InspectorPanel,
   TimelineBar,
@@ -13,28 +13,30 @@ export const StudioLayout: React.FC = () => {
   const [isExportOpen, setIsExportOpen] = useState(false);
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
-      {/* Studio Header Toolbar */}
-      <HeaderBar onOpenExport={() => setIsExportOpen(true)} />
+    <div className="flex-1 flex flex-col h-screen w-screen overflow-hidden bg-obsidian text-obsidian-heading">
+      {/* 1. TOP TOOLBAR */}
+      <TopToolbar onOpenExport={() => setIsExportOpen(true)} />
 
-      {/* Mode Selector Strip */}
-      <ModeSelector />
-
-      {/* Center Stage & Right Inspector */}
+      {/* 2. MAIN WORKSPACE: LEFT SIDEBAR + CENTER CANVAS + RIGHT INSPECTOR */}
       <div className="flex-1 flex overflow-hidden relative">
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
+        {/* Left Sidebar Navigation */}
+        <LeftSidebar />
+
+        {/* Center Canvas Stage & Bottom Timeline */}
+        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
           <CanvasStage />
           <TimelineBar />
         </div>
+
+        {/* Right Inspector Panel */}
         <InspectorPanel />
       </div>
 
-      {/* Engine Status Diagnostic Footer */}
+      {/* 3. ENGINE DIAGNOSTICS STATUS FOOTER */}
       <StatusFooter />
 
-      {/* Export Artwork Modal */}
+      {/* 4. EXPORT MASTER MODAL */}
       <ExportModal isOpen={isExportOpen} onClose={() => setIsExportOpen(false)} />
     </div>
   );
 };
-

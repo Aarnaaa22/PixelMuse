@@ -1,5 +1,17 @@
 import { create } from 'zustand';
-import { PalettePreset, RenderConfig, RenderMode, RenderStats, ImageMetadata } from '../types';
+import {
+  PalettePreset,
+  RenderConfig,
+  RenderMode,
+  RenderStats,
+  ImageMetadata,
+  StudioLayer,
+  ColorConfig,
+  BackgroundConfig,
+  EffectsConfig,
+  GeneralRenderParams,
+} from '../types';
+import { SidebarTab } from '../types/studio';
 
 export const BUILTIN_PALETTES: PalettePreset[] = [
   {
@@ -34,9 +46,85 @@ export const BUILTIN_PALETTES: PalettePreset[] = [
   },
 ];
 
+export const DEFAULT_RENDER_PARAMS: GeneralRenderParams = {
+  cellSize: 12,
+  density: 1.0,
+  coverage: 100,
+  invert: false,
+  edgeEmphasis: 0,
+};
+
+export const DEFAULT_COLOR_CONFIG: ColorConfig = {
+  brightness: 0,
+  contrast: 0,
+  saturation: 1.0,
+  grayscale: false,
+  tintColor: '#CCFF00',
+  tintOpacity: 0,
+};
+
+export const DEFAULT_BACKGROUND_CONFIG: BackgroundConfig = {
+  mode: 'solid',
+  opacity: 1.0,
+  blur: 0,
+  color: '#08080A',
+};
+
+export const DEFAULT_EFFECTS_CONFIG: EffectsConfig = {
+  bloom: 0,
+  vignette: 0,
+  scanlines: 0,
+  filmGrain: 0,
+  chromaticAberration: 0,
+  glitch: 0,
+};
+
+export const DEFAULT_LAYERS: StudioLayer[] = [
+  {
+    id: 'layer-post-fx',
+    name: 'Post FX & Kinetic Waves',
+    type: 'post-fx',
+    visible: true,
+    opacity: 1,
+    locked: false,
+    blendMode: 'normal',
+  },
+  {
+    id: 'layer-color-map',
+    name: 'Palette Mapping & Tint',
+    type: 'color-map',
+    visible: true,
+    opacity: 1,
+    locked: false,
+    blendMode: 'normal',
+  },
+  {
+    id: 'layer-raster-core',
+    name: 'Generative Raster Core',
+    type: 'raster-core',
+    visible: true,
+    opacity: 1,
+    locked: false,
+    blendMode: 'normal',
+  },
+  {
+    id: 'layer-base-photo',
+    name: 'Base Photography Sensor',
+    type: 'base-photo',
+    visible: true,
+    opacity: 1,
+    locked: true,
+    blendMode: 'normal',
+  },
+];
+
 export const DEFAULT_CONFIG: RenderConfig = {
   mode: 'ascii',
   resolutionScale: 1,
+  renderParams: DEFAULT_RENDER_PARAMS,
+  color: DEFAULT_COLOR_CONFIG,
+  background: DEFAULT_BACKGROUND_CONFIG,
+  effects: DEFAULT_EFFECTS_CONFIG,
   ascii: {
     characters: ' .:-=+*#%@',
     fontSize: 12,
@@ -51,7 +139,7 @@ export const DEFAULT_CONFIG: RenderConfig = {
     glow: 0,
   },
   dither: {
-    algorithm: 'bayer-4x4',
+    algorithm: 'bayer-8x8',
     scale: 2,
     threshold: 0.5,
     colorDepth: 4,
@@ -59,7 +147,7 @@ export const DEFAULT_CONFIG: RenderConfig = {
     serpentine: true,
   },
   mosaic: {
-    cellSize: 10,
+    cellSize: 12,
     shape: 'square',
     gap: 1,
     jitter: 0,
@@ -79,44 +167,91 @@ export const DEFAULT_CONFIG: RenderConfig = {
     type: 'none',
     intensity: 0.5,
     frequency: 1,
+    currentTime: 0,
+    duration: 10,
   },
   palette: BUILTIN_PALETTES[0],
 };
 
 interface StudioState {
+  projectName: string;
   config: RenderConfig;
+  layers: StudioLayer[];
   sourceImage: HTMLImageElement | HTMLCanvasElement | null;
   imageMetadata: ImageMetadata | null;
   stats: RenderStats;
+  
+  // Viewport & Canvas
   zoom: number;
   panX: number;
   panY: number;
-  activeInspectorTab: 'render' | 'palette' | 'motion' | 'export';
   isSplitView: boolean;
   splitPosition: number; // 0 to 100 percentage
   
-  // Actions
+  // Navigation & Panels
+  activeSidebarTab: SidebarTab;
+  collapsedSections: Record<string, boolean>; // e.g. { render: false, color: false, ... }
+  
+  // History
+  historyPast: RenderConfig[];
+  historyFuture: RenderConfig[];
+
+  // Save / Toast notification
+  lastSavedAt: number | null;
+
+  // Actions - Project & History
+  setProjectName: (name: string) => void;
+  undo: () => void;
+  redo: () => void;
+  pushHistory: () => void;
+  saveProject: () => void;
+
+  // Actions - Sidebar & Inspector
+  setActiveSidebarTab: (tab: SidebarTab) => void;
+  toggleSection: (sectionId: string) => void;
+
+  // Actions - Config & Parameters
   setMode: (mode: RenderMode) => void;
   updateConfig: (partial: Partial<RenderConfig>) => void;
+  updateRenderParams: (partial: Partial<GeneralRenderParams>) => void;
+  updateColorConfig: (partial: Partial<ColorConfig>) => void;
+  updateBackgroundConfig: (partial: Partial<BackgroundConfig>) => void;
+  updateEffectsConfig: (partial: Partial<EffectsConfig>) => void;
   updateAsciiConfig: (partial: Partial<RenderConfig['ascii']>) => void;
   updateDitherConfig: (partial: Partial<RenderConfig['dither']>) => void;
   updateMosaicConfig: (partial: Partial<RenderConfig['mosaic']>) => void;
   updateHalftoneConfig: (partial: Partial<RenderConfig['halftone']>) => void;
   updateMotionConfig: (partial: Partial<RenderConfig['motion']>) => void;
   setPalette: (palette: PalettePreset) => void;
-  setSourceImage: (img: HTMLImageElement | HTMLCanvasElement, metadata: ImageMetadata) => void;
+
+  // Section Resets
+  resetRenderSection: () => void;
+  resetColorSection: () => void;
+  resetBackgroundSection: () => void;
+  resetEffectsSection: () => void;
+  resetMotionSection: () => void;
+  resetAll: () => void;
+
+  // Actions - Layers
+  toggleLayerVisibility: (layerId: string) => void;
+  setLayerOpacity: (layerId: string, opacity: number) => void;
+
+  // Actions - Image & Viewport
+  setSourceImage: (img: HTMLImageElement | HTMLCanvasElement | null, metadata: ImageMetadata | null) => void;
+  clearImage: () => void;
   setStats: (stats: RenderStats) => void;
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
   resetViewport: () => void;
-  setActiveInspectorTab: (tab: 'render' | 'palette' | 'motion' | 'export') => void;
+  fitToScreen: () => void;
   toggleSplitView: () => void;
   setSplitPosition: (pos: number) => void;
-  resetConfig: () => void;
 }
 
-export const useStudioStore = create<StudioState>((set) => ({
+export const useStudioStore = create<StudioState>((set, get) => ({
+  projectName: 'UNTITLED_STUDIO_01',
   config: DEFAULT_CONFIG,
+  layers: DEFAULT_LAYERS,
   sourceImage: null,
   imageMetadata: null,
   stats: {
@@ -130,15 +265,119 @@ export const useStudioStore = create<StudioState>((set) => ({
   zoom: 1,
   panX: 0,
   panY: 0,
-  activeInspectorTab: 'render',
   isSplitView: false,
   splitPosition: 50,
+  activeSidebarTab: 'upload',
+  collapsedSections: {
+    render: false,
+    color: false,
+    background: true,
+    effects: true,
+    motion: true,
+  },
+  historyPast: [],
+  historyFuture: [],
+  lastSavedAt: null,
 
-  setMode: (mode) =>
-    set((state) => ({ config: { ...state.config, mode } })),
+  setProjectName: (projectName) => set({ projectName }),
 
-  updateConfig: (partial) =>
-    set((state) => ({ config: { ...state.config, ...partial } })),
+  pushHistory: () => {
+    const { config, historyPast } = get();
+    set({
+      historyPast: [...historyPast.slice(-15), JSON.parse(JSON.stringify(config))],
+      historyFuture: [],
+    });
+  },
+
+  undo: () => {
+    const { historyPast, historyFuture, config } = get();
+    if (historyPast.length === 0) return;
+    const previous = historyPast[historyPast.length - 1];
+    set({
+      config: previous,
+      historyPast: historyPast.slice(0, -1),
+      historyFuture: [JSON.parse(JSON.stringify(config)), ...historyFuture],
+    });
+  },
+
+  redo: () => {
+    const { historyPast, historyFuture, config } = get();
+    if (historyFuture.length === 0) return;
+    const next = historyFuture[0];
+    set({
+      config: next,
+      historyPast: [...historyPast, JSON.parse(JSON.stringify(config))],
+      historyFuture: historyFuture.slice(1),
+    });
+  },
+
+  saveProject: () => {
+    const { projectName, config, imageMetadata } = get();
+    const payload = {
+      id: `proj-${Date.now()}`,
+      name: projectName,
+      config,
+      imageMetadata,
+      savedAt: Date.now(),
+    };
+    try {
+      localStorage.setItem('pixelmuse_saved_project', JSON.stringify(payload));
+    } catch {
+      // fallback
+    }
+    set({ lastSavedAt: Date.now() });
+  },
+
+  setActiveSidebarTab: (activeSidebarTab) => set({ activeSidebarTab }),
+
+  toggleSection: (sectionId) =>
+    set((state) => ({
+      collapsedSections: {
+        ...state.collapsedSections,
+        [sectionId]: !state.collapsedSections[sectionId],
+      },
+    })),
+
+  setMode: (mode) => {
+    get().pushHistory();
+    set((state) => ({ config: { ...state.config, mode } }));
+  },
+
+  updateConfig: (partial) => {
+    set((state) => ({ config: { ...state.config, ...partial } }));
+  },
+
+  updateRenderParams: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        renderParams: { ...state.config.renderParams, ...partial },
+      },
+    })),
+
+  updateColorConfig: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        color: { ...state.config.color, ...partial },
+      },
+    })),
+
+  updateBackgroundConfig: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        background: { ...state.config.background, ...partial },
+      },
+    })),
+
+  updateEffectsConfig: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        effects: { ...state.config.effects, ...partial },
+      },
+    })),
 
   updateAsciiConfig: (partial) =>
     set((state) => ({
@@ -183,23 +422,77 @@ export const useStudioStore = create<StudioState>((set) => ({
   setPalette: (palette) =>
     set((state) => ({ config: { ...state.config, palette } })),
 
+  resetRenderSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, renderParams: DEFAULT_RENDER_PARAMS },
+    }));
+  },
+
+  resetColorSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, color: DEFAULT_COLOR_CONFIG },
+    }));
+  },
+
+  resetBackgroundSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, background: DEFAULT_BACKGROUND_CONFIG },
+    }));
+  },
+
+  resetEffectsSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, effects: DEFAULT_EFFECTS_CONFIG },
+    }));
+  },
+
+  resetMotionSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, motion: DEFAULT_CONFIG.motion },
+    }));
+  },
+
+  resetAll: () => {
+    get().pushHistory();
+    set({ config: DEFAULT_CONFIG });
+  },
+
+  toggleLayerVisibility: (layerId) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, visible: !l.visible } : l
+      ),
+    })),
+
+  setLayerOpacity: (layerId, opacity) =>
+    set((state) => ({
+      layers: state.layers.map((l) =>
+        l.id === layerId ? { ...l, opacity } : l
+      ),
+    })),
+
   setSourceImage: (img, metadata) =>
-    set({ sourceImage: img, imageMetadata: metadata }),
+    set({ sourceImage: img, imageMetadata: metadata, zoom: 1, panX: 0, panY: 0 }),
+
+  clearImage: () =>
+    set({ sourceImage: null, imageMetadata: null, zoom: 1, panX: 0, panY: 0 }),
 
   setStats: (stats) => set({ stats }),
 
-  setZoom: (zoom) => set({ zoom }),
+  setZoom: (zoom) => set({ zoom: Math.max(0.1, Math.min(8, zoom)) }),
 
   setPan: (panX, panY) => set({ panX, panY }),
 
   resetViewport: () => set({ zoom: 1, panX: 0, panY: 0 }),
 
-  setActiveInspectorTab: (tab) => set({ activeInspectorTab: tab }),
+  fitToScreen: () => set({ zoom: 0.9, panX: 0, panY: 0 }),
 
   toggleSplitView: () => set((state) => ({ isSplitView: !state.isSplitView })),
 
   setSplitPosition: (splitPosition) => set({ splitPosition }),
-
-  resetConfig: () => set({ config: DEFAULT_CONFIG }),
 }));
-

@@ -52,3 +52,4 @@ export class SobelFilter {
     return { magnitude, width, height };
   }
 }
+

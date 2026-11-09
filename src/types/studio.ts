@@ -1,5 +1,15 @@
 import { RenderConfig } from './engine';
 
+export type SidebarTab = 'upload' | 'presets' | 'modes' | 'layers';
+
+export interface SamplePhoto {
+  id: string;
+  title: string;
+  category: string;
+  width: number;
+  height: number;
+}
+
 export interface ImageMetadata {
   name: string;
   width: number;
