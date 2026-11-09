@@ -62,28 +62,34 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
 
   const renderModesList: { id: RenderMode; name: string; tag: string; desc: string }[] = [
     {
+      id: 'mosaic',
+      name: 'Mosaic',
+      tag: 'COLORED RECTANGLES',
+      desc: 'Renders each sampled cell as a colored rectangle with coverage control.',
+    },
+    {
+      id: 'pixel',
+      name: 'Pixel',
+      tag: 'PIXELATED IMAGE',
+      desc: 'Renders crisp continuous pixel blocks using average sampled colors.',
+    },
+    {
       id: 'ascii',
       name: 'ASCII Glyph',
       tag: 'LINGUISTIC RASTER',
-      desc: 'Luminance-mapped monospace typography matrix with dynamic glyph ramps.',
+      desc: 'Renders characters according to image brightness using customizable glyph ramps.',
+    },
+    {
+      id: 'dots',
+      name: 'Dots',
+      tag: 'CIRCULAR HALFTONE',
+      desc: 'Renders circular dots whose diameter and scale vary with local luminance.',
     },
     {
       id: 'dither',
       name: 'Ordered Dither',
       tag: '1-BIT BAYER / ATKINSON',
-      desc: 'Bayer 4×4 & 8×8 matrices and Apple 1984 Atkinson error diffusion.',
-    },
-    {
-      id: 'pixel-mosaic',
-      name: 'Pixel Mosaic',
-      tag: 'GEOMETRIC TESSELLATION',
-      desc: 'Square, diamond, and circular quantized cellular tiles with gap modulation.',
-    },
-    {
-      id: 'halftone',
-      name: 'Halftone Print',
-      tag: 'ROTARY SCREENING',
-      desc: 'Lithographic rotary press screening with modulated dot diameters.',
+      desc: 'Iconic computing heritage: 8x8 Bayer matrices and Atkinson error diffusion.',
     },
   ];
 

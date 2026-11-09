@@ -11,17 +11,27 @@ export class DitherRenderer extends BaseRenderer {
     config: RenderConfig,
     _time: number
   ): void {
-    const { dither, palette } = config;
+    const { dither, renderParams, palette } = config;
 
     const paletteColors = palette.colors.map(hexToRgb);
     if (paletteColors.length === 0) {
       paletteColors.push({ r: 8, g: 8, b: 10 }, { r: 204, g: 255, b: 0 });
     }
 
+    // Effective scale from dither scale and cell size
+    const scale = Math.max(1, Math.round(dither.scale || renderParams.cellSize / 4));
+
     if (dither.algorithm === 'atkinson') {
-      this.renderAtkinson(ctx, source, paletteColors, dither.scale);
+      this.renderAtkinson(ctx, source, paletteColors, scale, renderParams.invert);
     } else if (dither.algorithm === 'floyd-steinberg') {
-      this.renderFloydSteinberg(ctx, source, paletteColors, dither.scale, dither.serpentine);
+      this.renderFloydSteinberg(
+        ctx,
+        source,
+        paletteColors,
+        scale,
+        dither.serpentine,
+        renderParams.invert
+      );
     } else {
       // Ordered Bayer
       this.renderBayer(
@@ -29,29 +39,27 @@ export class DitherRenderer extends BaseRenderer {
         source,
         paletteColors,
         dither.algorithm === 'bayer-8x8' ? 8 : 4,
-        dither.scale
+        scale,
+        renderParams.invert
       );
     }
   }
 
-  /**
-   * Ordered Bayer Dithering
-   */
   private renderBayer(
     ctx: CanvasRenderingContext2D,
     source: ImageData,
     paletteColors: ColorRGB[],
     matrixSize: 4 | 8,
-    rawScale: number
+    scale: number,
+    invert: boolean
   ): void {
     const { width, height, data } = source;
     const output = ctx.createImageData(width, height);
     const outData = output.data;
 
     const matrix = matrixSize === 8 ? BAYER_8X8 : BAYER_4X4;
-    const scale = Math.max(1, Math.round(rawScale));
-    const darkColor = paletteColors[0];
-    const lightColor = paletteColors[paletteColors.length - 1];
+    const darkColor = invert ? paletteColors[paletteColors.length - 1] : paletteColors[0];
+    const lightColor = invert ? paletteColors[0] : paletteColors[paletteColors.length - 1];
 
     for (let y = 0; y < height; y++) {
       const my = Math.floor(y / scale) % matrixSize;
@@ -60,7 +68,8 @@ export class DitherRenderer extends BaseRenderer {
         const threshold = matrix[my][mx];
 
         const idx = (y * width + x) * 4;
-        const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+        let lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+        if (invert) lum = 1 - lum;
 
         const chosen = lum > threshold ? lightColor : darkColor;
 
@@ -74,39 +83,30 @@ export class DitherRenderer extends BaseRenderer {
     ctx.putImageData(output, 0, 0);
   }
 
-  /**
-   * Atkinson Dithering (Apple MacPaint 1984, preserves 75% error for clean, crisp grain)
-   * Pattern:
-   *        *   1/8  1/8
-   *  1/8  1/8  1/8
-   *       1/8
-   */
   private renderAtkinson(
     ctx: CanvasRenderingContext2D,
     source: ImageData,
     paletteColors: ColorRGB[],
-    rawScale: number
+    scale: number,
+    invert: boolean
   ): void {
     const { width, height, data } = source;
-    const scale = Math.max(1, Math.round(rawScale));
     const sw = Math.floor(width / scale);
     const sh = Math.floor(height / scale);
 
-    // Working float buffer for error diffusion
     const bufR = new Float32Array(sw * sh);
     const bufG = new Float32Array(sw * sh);
     const bufB = new Float32Array(sw * sh);
 
-    // Downsample/sample into work buffer
     for (let y = 0; y < sh; y++) {
       const sy = Math.min(height - 1, y * scale);
       for (let x = 0; x < sw; x++) {
         const sx = Math.min(width - 1, x * scale);
         const sIdx = (sy * width + sx) * 4;
         const bIdx = y * sw + x;
-        bufR[bIdx] = data[sIdx];
-        bufG[bIdx] = data[sIdx + 1];
-        bufB[bIdx] = data[sIdx + 2];
+        bufR[bIdx] = invert ? 255 - data[sIdx] : data[sIdx];
+        bufG[bIdx] = invert ? 255 - data[sIdx + 1] : data[sIdx + 1];
+        bufB[bIdx] = invert ? 255 - data[sIdx + 2] : data[sIdx + 2];
       }
     }
 
@@ -122,7 +122,6 @@ export class DitherRenderer extends BaseRenderer {
 
         const nearest = findNearestColor({ r: oldR, g: oldG, b: oldB }, paletteColors);
 
-        // Blit back scaled cell to output
         for (let dy = 0; dy < scale; dy++) {
           const py = y * scale + dy;
           if (py >= height) break;
@@ -137,7 +136,6 @@ export class DitherRenderer extends BaseRenderer {
           }
         }
 
-        // Atkinson error (divided by 8)
         const errR = (oldR - nearest.r) / 8;
         const errG = (oldG - nearest.g) / 8;
         const errB = (oldB - nearest.b) / 8;
@@ -151,7 +149,6 @@ export class DitherRenderer extends BaseRenderer {
           }
         };
 
-        // Atkinson neighbors (6 neighbors each receive 1/8)
         diffuse(x + 1, y);
         diffuse(x + 2, y);
         diffuse(x - 1, y + 1);
@@ -164,21 +161,15 @@ export class DitherRenderer extends BaseRenderer {
     ctx.putImageData(output, 0, 0);
   }
 
-  /**
-   * Floyd-Steinberg Dithering with Serpentine Scan
-   * Pattern:
-   *       *   7/16
-   * 3/16 5/16 1/16
-   */
   private renderFloydSteinberg(
     ctx: CanvasRenderingContext2D,
     source: ImageData,
     paletteColors: ColorRGB[],
-    rawScale: number,
-    serpentine: boolean
+    scale: number,
+    serpentine: boolean,
+    invert: boolean
   ): void {
     const { width, height, data } = source;
-    const scale = Math.max(1, Math.round(rawScale));
     const sw = Math.floor(width / scale);
     const sh = Math.floor(height / scale);
 
@@ -192,9 +183,9 @@ export class DitherRenderer extends BaseRenderer {
         const sx = Math.min(width - 1, x * scale);
         const sIdx = (sy * width + sx) * 4;
         const bIdx = y * sw + x;
-        bufR[bIdx] = data[sIdx];
-        bufG[bIdx] = data[sIdx + 1];
-        bufB[bIdx] = data[sIdx + 2];
+        bufR[bIdx] = invert ? 255 - data[sIdx] : data[sIdx];
+        bufG[bIdx] = invert ? 255 - data[sIdx + 1] : data[sIdx + 1];
+        bufB[bIdx] = invert ? 255 - data[sIdx + 2] : data[sIdx + 2];
       }
     }
 

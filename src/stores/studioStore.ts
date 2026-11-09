@@ -52,6 +52,7 @@ export const DEFAULT_RENDER_PARAMS: GeneralRenderParams = {
   coverage: 100,
   invert: false,
   edgeEmphasis: 0,
+  charSet: ' .:-=+*#%@',
 };
 
 export const DEFAULT_COLOR_CONFIG: ColorConfig = {

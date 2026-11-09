@@ -1,6 +1,6 @@
 import { BaseRenderer } from './BaseRenderer';
 import { RenderConfig, RenderMode } from '../types';
-import { ImageDataProcessor } from '../image-processing';
+import { CellGridSampler } from '../image-processing/CellGridSampler';
 import { MotionEcosystem } from '../animation-engine';
 import { quantizer } from '../image-processing/ColorQuantizer';
 
@@ -22,16 +22,15 @@ export class AsciiRenderer extends BaseRenderer {
     config: RenderConfig,
     time: number
   ): void {
-    const { ascii, motion, palette } = config;
-    const { width, height, data } = source;
-    
-    // Clear background
-    this.clearCanvas(ctx, ascii.backgroundColor);
+    const { renderParams, ascii, motion, palette } = config;
+    const { cellSize, density, invert, edgeEmphasis, charSet } = renderParams;
 
-    const chars = ascii.characters || ' .:-=+*#%@';
+    const chars = charSet || ascii.characters || ' .:-=+*#%@';
     const charLen = chars.length;
-    const fontSize = Math.max(6, ascii.fontSize);
-    const lineHeight = Math.max(6, ascii.lineHeight || fontSize);
+
+    // Sample cell grid
+    const grid = CellGridSampler.sample(source, cellSize, density, edgeEmphasis);
+    const fontSize = Math.max(6, Math.round(grid.cellHeight));
 
     ctx.save();
     ctx.font = `${fontSize}px ${ascii.fontFamily || '"JetBrains Mono", monospace'}`;
@@ -44,105 +43,74 @@ export class AsciiRenderer extends BaseRenderer {
       ctx.shadowColor = ascii.monochromeColor;
     }
 
-    // Step across the image based on cell size
-    const stepX = fontSize * 0.6; // average mono aspect ratio
-    const stepY = lineHeight;
+    for (let i = 0; i < grid.cells.length; i++) {
+      const cell = grid.cells[i];
+      let { r, g, b, luminance, edge, x, y, width, height } = cell;
 
-    const cols = Math.floor(width / stepX);
-    const rows = Math.floor(height / stepY);
-
-    const lumMap = ImageDataProcessor.extractLuminanceMap(
-      source,
-      ascii.brightness,
-      ascii.contrast
-    );
-
-    for (let r = 0; r < rows; r++) {
-      const y = r * stepY;
-      const sampleY = Math.min(height - 1, Math.floor(y + stepY * 0.5));
-
-      for (let c = 0; c < cols; c++) {
-        const x = c * stepX;
-        const sampleX = Math.min(width - 1, Math.floor(x + stepX * 0.5));
-        const pixelIdx = sampleY * width + sampleX;
-
-        let lum = lumMap[pixelIdx];
-        if (ascii.invert) {
-          lum = 1 - lum;
-        }
-
-        // Apply motion modulation
-        const motionOffset = MotionEcosystem.getOffset(x, y, time, motion);
-        const charIdx = Math.min(
-          charLen - 1,
-          Math.max(0, Math.floor(lum * charLen))
-        );
-        const char = chars[charIdx];
-
-        if (char === ' ' || !char) continue;
-
-        // Determine glyph color
-        if (ascii.colorMode === 'original') {
-          const rawIdx = pixelIdx * 4;
-          ctx.fillStyle = `rgb(${data[rawIdx]}, ${data[rawIdx + 1]}, ${data[rawIdx + 2]})`;
-        } else if (ascii.colorMode === 'palette') {
-          const rawIdx = pixelIdx * 4;
-          const quantized = quantizer.quantizePixel(
-            { r: data[rawIdx], g: data[rawIdx + 1], b: data[rawIdx + 2] },
-            palette.colors
-          );
-          ctx.fillStyle = `rgb(${quantized.r}, ${quantized.g}, ${quantized.b})`;
-        } else if (ascii.colorMode === 'gradient') {
-          const t = r / Math.max(1, rows - 1);
-          ctx.fillStyle = t > 0.5 ? '#CCFF00' : '#9D4EDD';
-        } else {
-          ctx.fillStyle = ascii.monochromeColor;
-        }
-
-        ctx.globalAlpha = Math.min(1, Math.max(0.1, motionOffset.alphaMod));
-        ctx.fillText(char, x + motionOffset.dx + stepX * 0.5, y + motionOffset.dy + stepY * 0.5);
+      if (invert || ascii.invert) {
+        luminance = 1 - luminance;
+        r = 255 - r;
+        g = 255 - g;
+        b = 255 - b;
       }
+
+      const motionOffset = MotionEcosystem.getOffset(x, y, time, motion);
+      const charIdx = Math.min(charLen - 1, Math.max(0, Math.floor(luminance * charLen)));
+      const char = chars[charIdx];
+
+      if (char === ' ' || !char) continue;
+
+      // Color selection
+      if (ascii.colorMode === 'original') {
+        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      } else if (ascii.colorMode === 'palette') {
+        const quantized = quantizer.quantizePixel({ r, g, b }, palette.colors);
+        ctx.fillStyle = `rgb(${quantized.r}, ${quantized.g}, ${quantized.b})`;
+      } else {
+        ctx.fillStyle = ascii.monochromeColor;
+      }
+
+      // Edge emphasis brightness boost
+      if (edgeEmphasis > 0 && edge > 0.25) {
+        ctx.fillStyle = '#CCFF00';
+      }
+
+      ctx.globalAlpha = Math.min(1, Math.max(0.1, motionOffset.alphaMod));
+      ctx.fillText(
+        char,
+        x + width / 2 + motionOffset.dx,
+        y + height / 2 + motionOffset.dy
+      );
     }
 
     ctx.restore();
   }
 
-  /**
-   * Generates pure UTF-8 monospace text representation of the image
-   */
   static generateText(source: ImageData, config: RenderConfig): string {
-    const { ascii } = config;
-    const { width, height } = source;
-    const chars = ascii.characters || ' .:-=+*#%@';
+    const { renderParams, ascii } = config;
+    const chars = renderParams.charSet || ascii.characters || ' .:-=+*#%@';
     const charLen = chars.length;
-    const fontSize = Math.max(6, ascii.fontSize);
-    const stepX = fontSize * 0.6;
-    const stepY = fontSize;
-
-    const cols = Math.floor(width / stepX);
-    const rows = Math.floor(height / stepY);
-    const lumMap = ImageDataProcessor.extractLuminanceMap(
-      source,
-      ascii.brightness,
-      ascii.contrast
-    );
+    const grid = CellGridSampler.sample(source, renderParams.cellSize, renderParams.density, 0);
 
     const lines: string[] = [];
-    for (let r = 0; r < rows; r++) {
-      let line = '';
-      const sampleY = Math.min(height - 1, Math.floor(r * stepY + stepY * 0.5));
+    let currentLine = '';
+    let lastRow = 0;
 
-      for (let c = 0; c < cols; c++) {
-        const sampleX = Math.min(width - 1, Math.floor(c * stepX + stepX * 0.5));
-        const pixelIdx = sampleY * width + sampleX;
-        let lum = lumMap[pixelIdx];
-        if (ascii.invert) lum = 1 - lum;
-
-        const charIdx = Math.min(charLen - 1, Math.max(0, Math.floor(lum * charLen)));
-        line += chars[charIdx] || ' ';
+    for (let i = 0; i < grid.cells.length; i++) {
+      const cell = grid.cells[i];
+      if (cell.row !== lastRow) {
+        lines.push(currentLine);
+        currentLine = '';
+        lastRow = cell.row;
       }
-      lines.push(line);
+
+      let lum = cell.luminance;
+      if (renderParams.invert || ascii.invert) lum = 1 - lum;
+
+      const charIdx = Math.min(charLen - 1, Math.max(0, Math.floor(lum * charLen)));
+      currentLine += chars[charIdx] || ' ';
     }
+    if (currentLine) lines.push(currentLine);
 
     return lines.join('\n');
   }

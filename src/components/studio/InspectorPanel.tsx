@@ -111,10 +111,11 @@ export const InspectorPanel: React.FC = () => {
   } = useStudioStore();
 
   const modes: { id: RenderMode; label: string }[] = [
+    { id: 'mosaic', label: 'Mosaic' },
+    { id: 'pixel', label: 'Pixel' },
     { id: 'ascii', label: 'ASCII' },
+    { id: 'dots', label: 'Dots' },
     { id: 'dither', label: 'Dither' },
-    { id: 'pixel-mosaic', label: 'Mosaic' },
-    { id: 'halftone', label: 'Halftone' },
   ];
 
   return (
@@ -152,7 +153,7 @@ export const InspectorPanel: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-4 gap-1 p-1 bg-obsidian-950 border border-obsidian-border rounded-xs">
+            <div className="grid grid-cols-5 gap-1 p-1 bg-obsidian-950 border border-obsidian-border rounded-xs">
               {modes.map((m) => (
                 <button
                   key={m.id}
@@ -246,16 +247,19 @@ export const InspectorPanel: React.FC = () => {
           {config.mode === 'ascii' && (
             <div className="space-y-2 pt-2 border-t border-obsidian-border">
               <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Glyph Ramp Preset
+                Glyph Ramp (CharSet)
               </label>
               <div className="grid grid-cols-2 gap-1.5">
                 {ASCII_GLYPH_PRESETS.map((preset) => (
                   <button
                     key={preset.id}
-                    onClick={() => updateAsciiConfig({ characters: preset.chars })}
+                    onClick={() => {
+                      updateRenderParams({ charSet: preset.chars });
+                      updateAsciiConfig({ characters: preset.chars });
+                    }}
                     className={cn(
                       'p-1.5 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-left truncate',
-                      config.ascii.characters === preset.chars
+                      (config.renderParams.charSet || config.ascii.characters) === preset.chars
                         ? 'border-acid-lime text-white bg-obsidian-950'
                         : 'border-obsidian-border text-obsidian-muted hover:text-white'
                     )}
@@ -263,6 +267,19 @@ export const InspectorPanel: React.FC = () => {
                     {preset.name}
                   </button>
                 ))}
+              </div>
+
+              <div className="pt-1.5">
+                <input
+                  type="text"
+                  value={config.renderParams.charSet || config.ascii.characters}
+                  onChange={(e) => {
+                    updateRenderParams({ charSet: e.target.value });
+                    updateAsciiConfig({ characters: e.target.value });
+                  }}
+                  className="w-full bg-obsidian-950 border border-obsidian-border px-2.5 py-1 font-mono text-xs text-acid-lime focus:outline-none focus:border-acid-lime rounded-xs"
+                  placeholder="Custom characters..."
+                />
               </div>
             </div>
           )}

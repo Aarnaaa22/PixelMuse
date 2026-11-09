@@ -1,5 +1,8 @@
 export type RenderMode = 
+  | 'mosaic'
+  | 'pixel'
   | 'ascii'
+  | 'dots'
   | 'dither'
   | 'pixel-mosaic'
   | 'halftone'
@@ -50,7 +53,7 @@ export interface DitherConfig {
   algorithm: DitherAlgorithm;
   scale: number;
   threshold: number;
-  colorDepth: number; // 2, 4, 8, 16 colors
+  colorDepth: number;
   paletteId: string;
   serpentine: boolean;
 }
@@ -97,11 +100,12 @@ export interface EffectsConfig {
 }
 
 export interface GeneralRenderParams {
-  cellSize: number;     // 4 to 48 px
+  cellSize: number;     // 4 to 64 px
   density: number;      // 0.2 to 2.0
-  coverage: number;     // 0 to 100 %
+  coverage: number;     // 10 to 100 %
   invert: boolean;
   edgeEmphasis: number; // 0 to 100 %
+  charSet: string;      // custom ASCII glyph ramp
 }
 
 export interface AnimationMotionConfig {
