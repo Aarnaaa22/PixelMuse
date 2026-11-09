@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-obsidian: #08080A;
+    --border-subtle: #1F1F28;
+    --accent-violet: #9D4EDD;
+    --accent-lime: #CCFF00;
+    --accent-coral: #FF473A;
+  }
+
+  body {
+    background-color: #08080A;
+    color: #EDEDF2;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #08080A;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #23232E;
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3A3A4D;
+  }
+}
+
+/* Subtle Film & Matrix Grain Filter */
+.studio-grain {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.studio-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+.studio-checker {
+  background-color: #0D0D11;
+  background-image: 
+    linear-gradient(45deg, #131318 25%, transparent 25%), 
+    linear-gradient(-45deg, #131318 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #131318 75%), 
+    linear-gradient(-45deg, transparent 75%, #131318 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Editorial Typography Enhancements */
+.font-editorial {
+  font-family: 'Instrument Serif', Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.font-display {
+  font-family: 'Syne', sans-serif;
+}
+
+.font-mono-tech {
+  font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: "zero" 1, "tnum" 1;
+}
+
+/* Precise high-contrast borders */
+.border-precision {
+  border: 1px solid #1F1F28;
+}
+
+.border-precision-hover:hover {
+  border-color: #2E2E3C;
+}
+
+/* Custom interactive active states */
+.active-glow-violet {
+  box-shadow: 0 0 16px -2px rgba(157, 78, 221, 0.4);
+}
+
+.active-glow-lime {
+  box-shadow: 0 0 16px -2px rgba(204, 255, 0, 0.4);
+}
+
