@@ -86,7 +86,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
                 onChange={(e) => setNameInput(e.target.value)}
                 autoFocus
                 onBlur={() => setIsEditingName(false)}
-                className="bg-obsidian-surface border border-acid-lime px-2 py-1 font-mono text-xs text-white focus:outline-none rounded-xs w-48"
+                className="bg-obsidian-surface border border-acid-lime px-2 py-1 font-mono text-xs text-white focus:outline-none rounded-xs w-36 sm:w-48"
               />
               <IconButton size="xs" variant="lime" type="submit">
                 <Check className="w-3 h-3 text-black" />
@@ -98,10 +98,10 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
                 setNameInput(projectName);
                 setIsEditingName(true);
               }}
-              className="group flex items-center gap-2 cursor-pointer py-1 px-2 rounded-xs hover:bg-obsidian-surface transition-colors"
+              className="group hidden sm:flex items-center gap-2 cursor-pointer py-1 px-2 rounded-xs hover:bg-obsidian-surface transition-colors"
               title="Click to rename project"
             >
-              <span className="font-mono text-xs uppercase text-white font-medium tracking-wide">
+              <span className="font-mono text-xs uppercase text-white font-medium tracking-wide truncate max-w-[140px] md:max-w-none">
                 {projectName}
               </span>
               <Edit2 className="w-3 h-3 text-obsidian-muted opacity-0 group-hover:opacity-100 transition-opacity" />

@@ -176,17 +176,15 @@ export const CanvasStage: React.FC = () => {
               className="absolute inset-0 overflow-hidden border-r-2 border-acid-lime pointer-events-none"
               style={{ width: `${splitPosition}%` }}
             >
-              {'src' in sourceImage ? (
-                <img
-                  src={sourceImage.src}
-                  alt="Original Raw Sensor"
-                  className="w-full h-full object-cover max-w-none"
-                  style={{
-                    width: canvasRef.current?.width || '100%',
-                    height: canvasRef.current?.height || '100%',
-                  }}
-                />
-              ) : null}
+              <img
+                src={'src' in sourceImage ? sourceImage.src : (sourceImage as HTMLCanvasElement).toDataURL()}
+                alt="Original Raw Sensor"
+                className="w-full h-full object-cover max-w-none"
+                style={{
+                  width: canvasRef.current?.width || '100%',
+                  height: canvasRef.current?.height || '100%',
+                }}
+              />
 
               {/* Tag Overlays */}
               <div className="absolute top-3 left-3 bg-obsidian-950/80 border border-obsidian-border px-2 py-0.5 font-mono text-2xs text-white">

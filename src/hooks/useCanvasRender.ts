@@ -63,7 +63,7 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
         : Math.min(dur, scaledTime);
       renderFrame(loopedTime);
     }
-  }, Boolean(config.motion.isPlaying || config.motion.animated));
+  }, Boolean(config.motion.isPlaying));
 
   return {
     renderFrame,
