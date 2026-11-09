@@ -62,3 +62,4 @@ export class HexagonsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

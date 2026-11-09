@@ -107,3 +107,4 @@ export class BrailleRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

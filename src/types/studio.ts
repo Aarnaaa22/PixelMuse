@@ -18,7 +18,7 @@ export interface ImageMetadata {
   aspectRatio: number;
 }
 
-export type ExportFormat = 'png' | 'jpeg' | 'svg' | 'txt' | 'json';
+export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'svg' | 'txt' | 'json';
 
 export interface ExportOptions {
   format: ExportFormat;

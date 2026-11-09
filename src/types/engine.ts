@@ -100,6 +100,22 @@ export interface HalftoneConfig {
   sharpness: number;
 }
 
+export type OverlayBlendMode =
+  | 'normal'
+  | 'multiply'
+  | 'screen'
+  | 'overlay'
+  | 'color-dodge'
+  | 'difference';
+
+export type BlurType = 'off' | 'gaussian' | 'box' | 'radial' | 'motion';
+
+export interface BlurConfig {
+  type: BlurType;
+  radius: number;      // 0 to 40 px
+  angle: number;       // 0 to 360 deg (for motion blur)
+}
+
 export interface ColorConfig {
   brightness: number;   // -50 to 50
   contrast: number;     // -50 to 80
@@ -107,12 +123,23 @@ export interface ColorConfig {
   grayscale: boolean;
   tintColor: string;
   tintOpacity: number;  // 0 to 1
+  blendMode?: OverlayBlendMode;
 }
 
+export type BackgroundMode =
+  | 'original'
+  | 'blurred'
+  | 'solid'
+  | 'none'
+  | 'source-blur'
+  | 'transparent'
+  | 'grid';
+
 export interface BackgroundConfig {
-  mode: 'solid' | 'transparent' | 'source-blur' | 'grid';
+  mode: BackgroundMode;
   opacity: number;      // 0 to 1
   blur: number;         // 0 to 40 px
+  blurType?: BlurType;
   color: string;
 }
 
@@ -123,6 +150,9 @@ export interface EffectsConfig {
   filmGrain: number;            // 0 to 1
   chromaticAberration: number;  // 0 to 16 px
   glitch: number;               // 0 to 1
+  halftone: number;             // 0 to 1
+  pixelation: number;           // 0 to 32 px
+  filmDust: number;             // 0 to 1
 }
 
 export interface GeneralRenderParams {
@@ -160,6 +190,7 @@ export interface RenderConfig {
   resolutionScale: number; // 0.25 to 2
   renderParams: GeneralRenderParams;
   color: ColorConfig;
+  blur?: BlurConfig;
   background: BackgroundConfig;
   effects: EffectsConfig;
   ascii: AsciiConfig;

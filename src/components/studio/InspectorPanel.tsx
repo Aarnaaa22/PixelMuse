@@ -8,10 +8,11 @@ import {
   Sparkles,
   Zap,
   Info,
+  Droplets,
 } from 'lucide-react';
 import { Slider } from '../ui';
 import { useStudioStore, BUILTIN_PALETTES } from '../../stores';
-import { RenderMode } from '../../types';
+import { RenderMode, BlurType, OverlayBlendMode, BackgroundMode } from '../../types';
 import { ASCII_GLYPH_PRESETS } from '../../rendering-modes/AsciiRenderer';
 import { cn } from '../../utilities';
 
@@ -93,6 +94,7 @@ export const InspectorPanel: React.FC = () => {
     setMode,
     updateRenderParams,
     updateColorConfig,
+    updateBlurConfig,
     updateBackgroundConfig,
     updateEffectsConfig,
     updateMotionConfig,
@@ -105,6 +107,7 @@ export const InspectorPanel: React.FC = () => {
     toggleSection,
     resetRenderSection,
     resetColorSection,
+    resetBlurSection,
     resetBackgroundSection,
     resetEffectsSection,
     resetMotionSection,
@@ -486,10 +489,88 @@ export const InspectorPanel: React.FC = () => {
               unit="x"
               onChange={(val) => updateColorConfig({ tintOpacity: val })}
             />
+
+            {/* Overlay Blend Mode */}
+            <div className="space-y-1.5 pt-1">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Overlay Blend Mode
+              </label>
+              <select
+                value={config.color.blendMode || 'normal'}
+                onChange={(e) => updateColorConfig({ blendMode: e.target.value as OverlayBlendMode })}
+                className="w-full bg-obsidian-950 border border-obsidian-border hover:border-acid-lime/60 px-2.5 py-1.5 font-mono text-xs text-white focus:outline-none focus:border-acid-lime rounded-xs cursor-pointer"
+              >
+                <option value="normal">Normal</option>
+                <option value="multiply">Multiply</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="color-dodge">Color Dodge</option>
+                <option value="difference">Difference</option>
+              </select>
+            </div>
           </div>
         </InspectorSection>
 
-        {/* 3. BACKGROUND SECTION */}
+        {/* 3. BLUR SECTION */}
+        <InspectorSection
+          id="blur"
+          title="Blur"
+          icon={<Droplets className="w-4 h-4" />}
+          isOpen={!collapsedSections.blur}
+          onToggle={() => toggleSection('blur')}
+          onReset={resetBlurSection}
+          badge={config.blur && config.blur.type !== 'off' ? config.blur.type.toUpperCase() : undefined}
+        >
+          <div className="space-y-2">
+            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+              Pre-Filter Blur Type
+            </label>
+            <div className="grid grid-cols-3 gap-1">
+              {(['off', 'gaussian', 'box', 'radial', 'motion'] as BlurType[]).map((bType) => (
+                <button
+                  key={bType}
+                  onClick={() => updateBlurConfig({ type: bType })}
+                  className={cn(
+                    'py-1.5 text-2xs font-mono uppercase tracking-wider rounded-xs border text-center transition-colors',
+                    (config.blur?.type || 'off') === bType
+                      ? 'border-acid-lime text-white bg-obsidian-950 font-semibold'
+                      : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                  )}
+                >
+                  {bType}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {config.blur && config.blur.type !== 'off' && (
+            <>
+              <Slider
+                label="Blur Radius"
+                value={config.blur.radius}
+                min={0}
+                max={40}
+                step={1}
+                unit="px"
+                onChange={(val) => updateBlurConfig({ radius: val })}
+              />
+
+              {config.blur.type === 'motion' && (
+                <Slider
+                  label="Motion Direction Angle"
+                  value={config.blur.angle || 0}
+                  min={0}
+                  max={360}
+                  step={5}
+                  unit="°"
+                  onChange={(val) => updateBlurConfig({ angle: val })}
+                />
+              )}
+            </>
+          )}
+        </InspectorSection>
+
+        {/* 4. BACKGROUND SECTION */}
         <InspectorSection
           id="background"
           title="Background"
@@ -497,24 +578,32 @@ export const InspectorPanel: React.FC = () => {
           isOpen={!collapsedSections.background}
           onToggle={() => toggleSection('background')}
           onReset={resetBackgroundSection}
+          badge={config.background.mode.toUpperCase()}
         >
           <div className="space-y-2">
             <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
               Background Mode
             </label>
             <div className="grid grid-cols-2 gap-1.5">
-              {(['solid', 'transparent', 'source-blur', 'grid'] as const).map((mode) => (
+              {[
+                { id: 'original', label: 'Original' },
+                { id: 'blurred', label: 'Blurred' },
+                { id: 'solid', label: 'Solid Color' },
+                { id: 'none', label: 'None' },
+              ].map((bg) => (
                 <button
-                  key={mode}
-                  onClick={() => updateBackgroundConfig({ mode })}
+                  key={bg.id}
+                  onClick={() => updateBackgroundConfig({ mode: bg.id as BackgroundMode })}
                   className={cn(
                     'p-2 text-2xs font-mono uppercase tracking-wider rounded-xs border text-center transition-colors',
-                    config.background.mode === mode
+                    config.background.mode === bg.id ||
+                      (bg.id === 'blurred' && config.background.mode === 'source-blur') ||
+                      (bg.id === 'none' && config.background.mode === 'transparent')
                       ? 'border-acid-lime text-white bg-obsidian-950 font-semibold'
                       : 'border-obsidian-border text-obsidian-muted hover:text-white'
                   )}
                 >
-                  {mode}
+                  {bg.label}
                 </button>
               ))}
             </div>
@@ -530,18 +619,63 @@ export const InspectorPanel: React.FC = () => {
             onChange={(val) => updateBackgroundConfig({ opacity: val })}
           />
 
-          <Slider
-            label="Background Blur"
-            value={config.background.blur}
-            min={0}
-            max={40}
-            step={1}
-            unit="px"
-            onChange={(val) => updateBackgroundConfig({ blur: val })}
-          />
+          {(config.background.mode === 'blurred' || config.background.mode === 'source-blur') && (
+            <>
+              <Slider
+                label="Background Blur Radius"
+                value={config.background.blur}
+                min={0}
+                max={40}
+                step={1}
+                unit="px"
+                onChange={(val) => updateBackgroundConfig({ blur: val })}
+              />
+
+              <div className="space-y-1.5 pt-1">
+                <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                  Background Blur Type
+                </label>
+                <div className="grid grid-cols-4 gap-1">
+                  {(['gaussian', 'box', 'radial', 'motion'] as BlurType[]).map((bType) => (
+                    <button
+                      key={bType}
+                      onClick={() => updateBackgroundConfig({ blurType: bType })}
+                      className={cn(
+                        'py-1 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-center transition-colors',
+                        (config.background.blurType || 'gaussian') === bType
+                          ? 'border-acid-lime text-white bg-obsidian-950 font-semibold'
+                          : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                      )}
+                    >
+                      {bType}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {config.background.mode === 'solid' && (
+            <div className="space-y-1.5 pt-1">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Background Solid Fill
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={config.background.color || '#08080A'}
+                  onChange={(e) => updateBackgroundConfig({ color: e.target.value })}
+                  className="w-8 h-8 rounded-xs border border-obsidian-border bg-transparent cursor-pointer"
+                />
+                <span className="font-mono text-xs text-white uppercase">
+                  {config.background.color || '#08080A'}
+                </span>
+              </div>
+            </div>
+          )}
         </InspectorSection>
 
-        {/* 4. EFFECTS SECTION */}
+        {/* 5. EFFECTS SECTION */}
         <InspectorSection
           id="effects"
           title="Effects"
@@ -550,8 +684,32 @@ export const InspectorPanel: React.FC = () => {
           onToggle={() => toggleSection('effects')}
           onReset={resetEffectsSection}
         >
+          {/* Post-Processing Pixelation */}
           <Slider
-            label="Bloom Glow"
+            label="Pixelation Quantizer"
+            value={config.effects.pixelation || 0}
+            min={0}
+            max={32}
+            step={1}
+            unit="px"
+            accentColor="lime"
+            onChange={(val) => updateEffectsConfig({ pixelation: val })}
+          />
+
+          {/* Halftone Screen */}
+          <Slider
+            label="Halftone Screen Overlay"
+            value={config.effects.halftone || 0}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            accentColor="lime"
+            onChange={(val) => updateEffectsConfig({ halftone: val })}
+          />
+
+          <Slider
+            label="Bloom Cathode Glow"
             value={config.effects.bloom}
             min={0}
             max={30}
@@ -565,7 +723,7 @@ export const InspectorPanel: React.FC = () => {
           />
 
           <Slider
-            label="Vignette"
+            label="Optical Vignette"
             value={config.effects.vignette}
             min={0}
             max={1}
@@ -594,6 +752,17 @@ export const InspectorPanel: React.FC = () => {
             onChange={(val) => updateEffectsConfig({ filmGrain: val })}
           />
 
+          {/* Film Dust & Scratches */}
+          <Slider
+            label="Film Dust & Scratches"
+            value={config.effects.filmDust || 0}
+            min={0}
+            max={1}
+            step={0.05}
+            unit="x"
+            onChange={(val) => updateEffectsConfig({ filmDust: val })}
+          />
+
           <Slider
             label="Chromatic Aberration"
             value={config.effects.chromaticAberration}
@@ -606,7 +775,7 @@ export const InspectorPanel: React.FC = () => {
           />
 
           <Slider
-            label="Signal Glitch"
+            label="Signal Glitch Disruption"
             value={config.effects.glitch}
             min={0}
             max={1}
@@ -617,7 +786,7 @@ export const InspectorPanel: React.FC = () => {
           />
         </InspectorSection>
 
-        {/* 5. MOTION SECTION */}
+        {/* 6. MOTION SECTION */}
         <InspectorSection
           id="motion"
           title="Motion"

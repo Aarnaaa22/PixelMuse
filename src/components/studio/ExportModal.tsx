@@ -3,6 +3,8 @@ import { X, Download, Check, Sparkles, FolderPlus } from 'lucide-react';
 import { Button } from '../ui';
 import { useStudioStore } from '../../stores';
 import { ExportFormat } from '../../types';
+import { CanvasPipeline } from '../../rendering-engine';
+import { CellGridSampler } from '../../image-processing';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -16,21 +18,71 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [savedVault, setSavedVault] = useState(false);
 
-  const { config, projectName } = useStudioStore();
+  const { config, projectName, sourceImage, imageMetadata } = useStudioStore();
 
   if (!isOpen) return null;
 
   const handleDownload = () => {
     setIsExporting(true);
     try {
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return;
+      let targetCanvas: HTMLCanvasElement | null = null;
+
+      // Render through unified pipeline to ensure 100% preview-export parity and true scaling
+      if (sourceImage && imageMetadata) {
+        const exportCanvas = document.createElement('canvas');
+        const pipeline = new CanvasPipeline();
+        pipeline.attach(exportCanvas);
+        const exportConfig = {
+          ...config,
+          resolutionScale: config.resolutionScale * scale,
+        };
+        pipeline.execute(
+          sourceImage,
+          imageMetadata.width,
+          imageMetadata.height,
+          exportConfig,
+          config.motion.currentTime || 0
+        );
+        targetCanvas = exportCanvas;
+      } else {
+        targetCanvas = document.querySelector('canvas');
+      }
+
+      if (!targetCanvas) return;
 
       if (format === 'txt') {
-        // Plain ASCII text file
-        const textContent = `/* PIXELMUSE GENERATIVE ASCII ART - ${projectName} */\n/* MODE: ${config.mode.toUpperCase()} - SCALE: ${scale}x */\n\n` +
-          `[ASCII Matrix Export: ${canvas.width}x${canvas.height}]\n` +
-          `Characters: ${config.ascii.characters}\n`;
+        // Plain ASCII text file sampled directly from the rendered image
+        const tCtx = targetCanvas.getContext('2d');
+        const imgData = tCtx?.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
+        let asciiText = '';
+
+        if (imgData) {
+          const chars = config.renderParams.charSet || config.ascii.characters || ' .:-=+*#%@';
+          const grid = CellGridSampler.sample(
+            imgData,
+            Math.max(4, config.renderParams.cellSize),
+            config.renderParams.density
+          );
+          const lines: string[] = [];
+          for (let r = 0; r < grid.rows; r++) {
+            let line = '';
+            for (let c = 0; c < grid.cols; c++) {
+              const cell = grid.cells[r * grid.cols + c];
+              if (cell) {
+                const lum = config.renderParams.invert ? 1 - cell.luminance : cell.luminance;
+                const idx = Math.min(chars.length - 1, Math.max(0, Math.floor(lum * chars.length)));
+                line += chars[idx];
+              }
+            }
+            lines.push(line);
+          }
+          asciiText = lines.join('\n');
+        }
+
+        const textContent =
+          `/* PIXELMUSE GENERATIVE ART MATRIX - ${projectName} */\n` +
+          `/* RASTER MODE: ${config.mode.toUpperCase()} - RESOLUTION: ${targetCanvas.width}x${targetCanvas.height} */\n\n` +
+          asciiText;
 
         const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -40,10 +92,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
         link.click();
         URL.revokeObjectURL(url);
       } else {
-        const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const mime = format === 'jpeg' ? 'image/jpeg' : format === 'webp' ? 'image/webp' : 'image/png';
         const link = document.createElement('a');
         link.download = `${projectName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.${format}`;
-        link.href = canvas.toDataURL(mime, 0.95);
+        link.href = targetCanvas.toDataURL(mime, 0.95);
         link.click();
       }
 
@@ -101,8 +153,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => 
             <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
               Master Format
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['png', 'jpeg', 'txt'] as ExportFormat[]).map((fmt) => (
+            <div className="grid grid-cols-4 gap-2">
+              {(['png', 'jpeg', 'webp', 'txt'] as ExportFormat[]).map((fmt) => (
                 <button
                   key={fmt}
                   onClick={() => setFormat(fmt)}

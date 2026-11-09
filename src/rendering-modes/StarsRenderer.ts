@@ -65,3 +65,4 @@ export class StarsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

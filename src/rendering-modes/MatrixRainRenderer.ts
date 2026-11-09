@@ -84,3 +84,4 @@ export class MatrixRainRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

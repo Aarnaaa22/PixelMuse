@@ -4,3 +4,7 @@ export * from './Filters';
 export * from './SobelFilter';
 export * from './CellGridSampler';
 export * from './PostProcessingEngine';
+export * from './BlurEngine';
+export * from './ColorPipeline';
+export * from './PostEffectsPipeline';
+export * from './BackgroundProcessor';

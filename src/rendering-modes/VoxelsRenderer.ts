@@ -100,3 +100,4 @@ export class VoxelsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

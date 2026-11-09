@@ -122,3 +122,4 @@ export function useKeyboardShortcuts(onOpenExport: () => void, onToggleShortcuts
     onToggleShortcutsHelp,
   ]);
 }
+

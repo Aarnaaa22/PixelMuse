@@ -86,3 +86,4 @@ export class HatchRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

@@ -87,3 +87,4 @@ export class LegoRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

@@ -10,6 +10,7 @@ import {
   BackgroundConfig,
   EffectsConfig,
   GeneralRenderParams,
+  BlurConfig,
 } from '../types';
 import { SidebarTab } from '../types/studio';
 
@@ -55,6 +56,12 @@ export const DEFAULT_RENDER_PARAMS: GeneralRenderParams = {
   charSet: ' .:-=+*#%@',
 };
 
+export const DEFAULT_BLUR_CONFIG: BlurConfig = {
+  type: 'off',
+  radius: 0,
+  angle: 0,
+};
+
 export const DEFAULT_COLOR_CONFIG: ColorConfig = {
   brightness: 0,
   contrast: 0,
@@ -62,12 +69,14 @@ export const DEFAULT_COLOR_CONFIG: ColorConfig = {
   grayscale: false,
   tintColor: '#CCFF00',
   tintOpacity: 0,
+  blendMode: 'normal',
 };
 
 export const DEFAULT_BACKGROUND_CONFIG: BackgroundConfig = {
   mode: 'solid',
   opacity: 1.0,
   blur: 0,
+  blurType: 'gaussian',
   color: '#08080A',
 };
 
@@ -78,6 +87,9 @@ export const DEFAULT_EFFECTS_CONFIG: EffectsConfig = {
   filmGrain: 0,
   chromaticAberration: 0,
   glitch: 0,
+  halftone: 0,
+  pixelation: 0,
+  filmDust: 0,
 };
 
 export const DEFAULT_LAYERS: StudioLayer[] = [
@@ -124,6 +136,7 @@ export const DEFAULT_CONFIG: RenderConfig = {
   resolutionScale: 1,
   renderParams: DEFAULT_RENDER_PARAMS,
   color: DEFAULT_COLOR_CONFIG,
+  blur: DEFAULT_BLUR_CONFIG,
   background: DEFAULT_BACKGROUND_CONFIG,
   effects: DEFAULT_EFFECTS_CONFIG,
   ascii: {
@@ -216,6 +229,7 @@ interface StudioState {
   updateConfig: (partial: Partial<RenderConfig>) => void;
   updateRenderParams: (partial: Partial<GeneralRenderParams>) => void;
   updateColorConfig: (partial: Partial<ColorConfig>) => void;
+  updateBlurConfig: (partial: Partial<BlurConfig>) => void;
   updateBackgroundConfig: (partial: Partial<BackgroundConfig>) => void;
   updateEffectsConfig: (partial: Partial<EffectsConfig>) => void;
   updateAsciiConfig: (partial: Partial<RenderConfig['ascii']>) => void;
@@ -228,6 +242,7 @@ interface StudioState {
   // Section Resets
   resetRenderSection: () => void;
   resetColorSection: () => void;
+  resetBlurSection: () => void;
   resetBackgroundSection: () => void;
   resetEffectsSection: () => void;
   resetMotionSection: () => void;
@@ -272,6 +287,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   collapsedSections: {
     render: false,
     color: false,
+    blur: true,
     background: true,
     effects: true,
     motion: true,
@@ -364,6 +380,14 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       },
     })),
 
+  updateBlurConfig: (partial) =>
+    set((state) => ({
+      config: {
+        ...state.config,
+        blur: { ...(state.config.blur || DEFAULT_BLUR_CONFIG), ...partial },
+      },
+    })),
+
   updateBackgroundConfig: (partial) =>
     set((state) => ({
       config: {
@@ -434,6 +458,13 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     get().pushHistory();
     set((state) => ({
       config: { ...state.config, color: DEFAULT_COLOR_CONFIG },
+    }));
+  },
+
+  resetBlurSection: () => {
+    get().pushHistory();
+    set((state) => ({
+      config: { ...state.config, blur: DEFAULT_BLUR_CONFIG },
     }));
   },
 

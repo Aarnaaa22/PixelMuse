@@ -93,3 +93,4 @@ export class DiscoRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

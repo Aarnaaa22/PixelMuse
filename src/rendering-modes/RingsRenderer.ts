@@ -68,3 +68,4 @@ export class RingsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

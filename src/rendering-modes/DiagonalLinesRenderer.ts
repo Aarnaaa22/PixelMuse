@@ -72,3 +72,4 @@ export class DiagonalLinesRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

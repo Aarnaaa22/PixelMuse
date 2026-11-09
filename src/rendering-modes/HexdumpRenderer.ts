@@ -59,3 +59,4 @@ export class HexdumpRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

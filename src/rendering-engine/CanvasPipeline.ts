@@ -33,6 +33,7 @@ import {
   DitherRenderer,
 } from '../rendering-modes';
 import { PostProcessingEngine } from '../image-processing/PostProcessingEngine';
+import { BackgroundProcessor } from '../image-processing/BackgroundProcessor';
 
 export class CanvasPipeline {
   private targetCanvas: HTMLCanvasElement | null = null;
@@ -161,10 +162,16 @@ export class CanvasPipeline {
       this.cachedImageData = null;
     }
 
-    // 2. Render Background Layer based on backgroundMode, opacity, blur
-    this.renderBackground(targetWidth, targetHeight, sourceImage, config);
+    // 2. Render Background Layer based on background mode (original, blurred, solid, none)
+    BackgroundProcessor.render(
+      this.targetCtx,
+      targetWidth,
+      targetHeight,
+      sourceImage,
+      config.background
+    );
 
-    // 3. Obtain raw image data from source (with dimension cache check)
+    // 3. Obtain raw image data from source (with dimension cache check to avoid full re-extraction)
     if (
       !this.cachedImageData ||
       this.cachedSource !== sourceImage ||
@@ -179,13 +186,14 @@ export class CanvasPipeline {
       this.cachedHeight = targetHeight;
     }
 
-    // 4. Create working copy of raw image data and apply pre-filters (brightness, contrast, saturation, grayscale, tint)
+    // 4. Create working copy of raw image data and apply pre-filters (Pre-Blur, Brightness, Contrast, Saturation, Grayscale, Tint & Blend)
+    // Avoids permanently modifying the source image
     const workingImageData = new ImageData(
       new Uint8ClampedArray(this.cachedImageData.data),
       targetWidth,
       targetHeight
     );
-    PostProcessingEngine.applyPreFilters(workingImageData, config.color);
+    PostProcessingEngine.applyPreFilters(workingImageData, config.color, config.blur);
 
     // 5. Select and execute modular rendering mode with graceful fallback
     const modeKey = config.mode as string;
@@ -224,60 +232,5 @@ export class CanvasPipeline {
     };
 
     return this.lastStats;
-  }
-
-  /**
-   * Renders the background pass based on config.background settings:
-   * solid, transparent, source-blur, or grid.
-   */
-  private renderBackground(
-    width: number,
-    height: number,
-    sourceImage: CanvasImageSource,
-    config: RenderConfig
-  ): void {
-    if (!this.targetCtx) return;
-    const ctx = this.targetCtx;
-    const { background } = config;
-
-    ctx.save();
-
-    if (background.mode === 'transparent') {
-      ctx.clearRect(0, 0, width, height);
-    } else if (background.mode === 'source-blur') {
-      ctx.clearRect(0, 0, width, height);
-      ctx.filter = `blur(${Math.max(0, background.blur)}px)`;
-      ctx.globalAlpha = background.opacity;
-      ctx.drawImage(sourceImage, 0, 0, width, height);
-      ctx.filter = 'none';
-      ctx.globalAlpha = 1.0;
-    } else if (background.mode === 'grid') {
-      ctx.fillStyle = background.color || '#08080A';
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      const step = 24;
-      for (let x = 0; x < width; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < height; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
-      }
-    } else {
-      // Default solid
-      ctx.fillStyle = background.color || '#08080A';
-      ctx.globalAlpha = background.opacity;
-      ctx.fillRect(0, 0, width, height);
-      ctx.globalAlpha = 1.0;
-    }
-
-    ctx.restore();
   }
 }

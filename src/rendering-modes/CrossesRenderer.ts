@@ -65,3 +65,4 @@ export class CrossesRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

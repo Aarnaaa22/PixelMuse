@@ -62,3 +62,4 @@ export class DiamondsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

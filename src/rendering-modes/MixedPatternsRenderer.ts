@@ -94,3 +94,4 @@ export class MixedPatternsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+
