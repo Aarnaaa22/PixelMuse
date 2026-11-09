@@ -1,8 +1,34 @@
 export type RenderMode = 
-  | 'mosaic'
-  | 'pixel'
+  // Character Based
   | 'ascii'
+  // Geometric
+  | 'mosaic'
   | 'dots'
+  | 'crosses'
+  | 'diamonds'
+  | 'hexagons'
+  | 'triangles'
+  | 'rings'
+  | 'hearts'
+  | 'stars'
+  | 'bubbles'
+  | 'hatch'
+  | 'contour'
+  // Pixel Based
+  | 'pixel'
+  | 'halfblocks'
+  | 'braille'
+  // Pattern Based
+  | 'diagonal-lines'
+  | 'lines'
+  | 'mixed-patterns'
+  | 'voxels'
+  | 'lego'
+  // Special
+  | 'matrix-rain'
+  | 'hexdump'
+  | 'disco'
+  // Classic / Aliases
   | 'dither'
   | 'pixel-mosaic'
   | 'halftone'

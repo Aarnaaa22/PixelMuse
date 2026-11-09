@@ -1,9 +1,35 @@
 import { IRenderer, RenderConfig, RenderStats } from '../types';
 import {
-  MosaicRenderer,
-  PixelRenderer,
+  // Character Based
   AsciiRenderer,
+  // Geometric
+  MosaicRenderer,
   DotsRenderer,
+  CrossesRenderer,
+  DiamondsRenderer,
+  HexagonsRenderer,
+  TrianglesRenderer,
+  RingsRenderer,
+  HeartsRenderer,
+  StarsRenderer,
+  BubblesRenderer,
+  HatchRenderer,
+  ContourRenderer,
+  // Pixel Based
+  PixelRenderer,
+  HalfblocksRenderer,
+  BrailleRenderer,
+  // Pattern Based
+  DiagonalLinesRenderer,
+  LinesRenderer,
+  MixedPatternsRenderer,
+  VoxelsRenderer,
+  LegoRenderer,
+  // Special
+  MatrixRainRenderer,
+  HexdumpRenderer,
+  DiscoRenderer,
+  // Retro / Dither
   DitherRenderer,
 } from '../rendering-modes';
 import { PostProcessingEngine } from '../image-processing/PostProcessingEngine';
@@ -37,22 +63,50 @@ export class CanvasPipeline {
     if (!ctx) throw new Error('Failed to initialize offscreen canvas context');
     this.offscreenCtx = ctx;
 
-    // Register all initial render modes
-    const mosaic = new MosaicRenderer();
-    const pixel = new PixelRenderer();
-    const ascii = new AsciiRenderer();
-    const dots = new DotsRenderer();
-    const dither = new DitherRenderer();
+    // Register all 24 modular render modes
+    // Character Based
+    this.registerRenderer(new AsciiRenderer());
 
+    // Geometric
+    const mosaic = new MosaicRenderer();
+    const dots = new DotsRenderer();
     this.registerRenderer(mosaic);
-    this.registerRenderer(pixel);
-    this.registerRenderer(ascii);
     this.registerRenderer(dots);
-    this.registerRenderer(dither);
+    this.registerRenderer(new CrossesRenderer());
+    this.registerRenderer(new DiamondsRenderer());
+    this.registerRenderer(new HexagonsRenderer());
+    this.registerRenderer(new TrianglesRenderer());
+    this.registerRenderer(new RingsRenderer());
+    this.registerRenderer(new HeartsRenderer());
+    this.registerRenderer(new StarsRenderer());
+    this.registerRenderer(new BubblesRenderer());
+    this.registerRenderer(new HatchRenderer());
+    this.registerRenderer(new ContourRenderer());
+
+    // Pixel Based
+    this.registerRenderer(new PixelRenderer());
+    this.registerRenderer(new HalfblocksRenderer());
+    this.registerRenderer(new BrailleRenderer());
+
+    // Pattern Based
+    this.registerRenderer(new DiagonalLinesRenderer());
+    this.registerRenderer(new LinesRenderer());
+    this.registerRenderer(new MixedPatternsRenderer());
+    this.registerRenderer(new VoxelsRenderer());
+    this.registerRenderer(new LegoRenderer());
+
+    // Special
+    this.registerRenderer(new MatrixRainRenderer());
+    this.registerRenderer(new HexdumpRenderer());
+    this.registerRenderer(new DiscoRenderer());
+
+    // Dither & Retro
+    this.registerRenderer(new DitherRenderer());
 
     // Aliases for compatibility
     this.renderers.set('pixel-mosaic', mosaic);
     this.renderers.set('halftone', dots);
+    this.renderers.set('matrix', this.renderers.get('matrix-rain')!);
   }
 
   registerRenderer(renderer: IRenderer): void {
@@ -133,9 +187,13 @@ export class CanvasPipeline {
     );
     PostProcessingEngine.applyPreFilters(workingImageData, config.color);
 
-    // 5. Select and execute modular rendering mode
+    // 5. Select and execute modular rendering mode with graceful fallback
     const modeKey = config.mode as string;
-    const renderer = this.renderers.get(modeKey) || this.renderers.get('mosaic');
+    let renderer = this.renderers.get(modeKey);
+    if (!renderer) {
+      console.warn(`[PixelMuse Engine] Unsupported or unregistered render mode '${modeKey}', gracefully falling back to 'mosaic'.`);
+      renderer = this.renderers.get('mosaic');
+    }
 
     if (renderer) {
       renderer.render(this.targetCtx, workingImageData, config, time);

@@ -58,3 +58,4 @@ export class DotsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

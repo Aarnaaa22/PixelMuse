@@ -110,13 +110,52 @@ export const InspectorPanel: React.FC = () => {
     resetMotionSection,
   } = useStudioStore();
 
-  const modes: { id: RenderMode; label: string }[] = [
-    { id: 'mosaic', label: 'Mosaic' },
-    { id: 'pixel', label: 'Pixel' },
-    { id: 'ascii', label: 'ASCII' },
-    { id: 'dots', label: 'Dots' },
-    { id: 'dither', label: 'Dither' },
+  const allModesList: { id: RenderMode; label: string; group: string }[] = [
+    // Character Based
+    { id: 'ascii', label: 'ASCII Glyph', group: 'Character Based' },
+    // Geometric
+    { id: 'mosaic', label: 'Mosaic', group: 'Geometric' },
+    { id: 'dots', label: 'Dots', group: 'Geometric' },
+    { id: 'crosses', label: 'Crosses', group: 'Geometric' },
+    { id: 'diamonds', label: 'Diamonds', group: 'Geometric' },
+    { id: 'hexagons', label: 'Hexagons', group: 'Geometric' },
+    { id: 'triangles', label: 'Triangles', group: 'Geometric' },
+    { id: 'rings', label: 'Rings', group: 'Geometric' },
+    { id: 'hearts', label: 'Hearts', group: 'Geometric' },
+    { id: 'stars', label: 'Stars', group: 'Geometric' },
+    { id: 'bubbles', label: 'Bubbles', group: 'Geometric' },
+    { id: 'hatch', label: 'Hatch', group: 'Geometric' },
+    { id: 'contour', label: 'Contour', group: 'Geometric' },
+    // Pixel Based
+    { id: 'pixel', label: 'Pixel Blocks', group: 'Pixel Based' },
+    { id: 'halfblocks', label: 'Halfblocks ▀▄', group: 'Pixel Based' },
+    { id: 'braille', label: 'Braille 2×4', group: 'Pixel Based' },
+    // Pattern Based
+    { id: 'diagonal-lines', label: 'Diagonal Lines', group: 'Pattern Based' },
+    { id: 'lines', label: 'Lines Raster', group: 'Pattern Based' },
+    { id: 'mixed-patterns', label: 'Mixed Patterns', group: 'Pattern Based' },
+    { id: 'voxels', label: 'Voxels 3D', group: 'Pattern Based' },
+    { id: 'lego', label: 'Lego Bricks', group: 'Pattern Based' },
+    // Special
+    { id: 'matrix-rain', label: 'Matrix Rain', group: 'Special' },
+    { id: 'hexdump', label: 'Hexdump', group: 'Special' },
+    { id: 'disco', label: 'Disco Ball', group: 'Special' },
+    // Retro
+    { id: 'dither', label: 'Ordered Dither', group: 'Retro' },
   ];
+
+  // Group modes by category
+  const groups = Array.from(new Set(allModesList.map((m) => m.group)));
+
+  // Determine whether coverage applies to active mode
+  const coverageSupported = ![
+    'pixel',
+    'dither',
+    'ascii',
+    'braille',
+    'hexdump',
+    'matrix-rain',
+  ].includes(config.mode);
 
   return (
     <aside className="w-80 h-full bg-obsidian-surface border-l border-obsidian-border flex flex-col z-20 overflow-hidden select-none">
@@ -125,8 +164,8 @@ export const InspectorPanel: React.FC = () => {
         <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted font-semibold">
           Studio Inspector
         </span>
-        <span className="font-mono text-2xs text-acid-lime uppercase">
-          {config.mode.toUpperCase()}
+        <span className="font-mono text-2xs text-acid-lime uppercase font-semibold">
+          {config.mode}
         </span>
       </div>
 
@@ -142,33 +181,34 @@ export const InspectorPanel: React.FC = () => {
           onReset={resetRenderSection}
           badge={config.mode}
         >
-          {/* Render Mode Selector Tabs */}
+          {/* Render Mode Categorized Select Dropdown */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Engine Pipeline
+                Raster Engine ({allModesList.length} Modes)
               </label>
               <span title="Select active raster engine">
                 <Info className="w-3 h-3 text-obsidian-muted" />
               </span>
             </div>
 
-            <div className="grid grid-cols-5 gap-1 p-1 bg-obsidian-950 border border-obsidian-border rounded-xs">
-              {modes.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => setMode(m.id)}
-                  className={cn(
-                    'py-1.5 text-2xs font-mono uppercase tracking-wider rounded-xs text-center transition-colors',
-                    config.mode === m.id
-                      ? 'bg-obsidian-surface border border-acid-lime/50 text-white font-semibold'
-                      : 'text-obsidian-muted hover:text-white'
-                  )}
-                >
-                  {m.label}
-                </button>
+            <select
+              value={config.mode}
+              onChange={(e) => setMode(e.target.value as RenderMode)}
+              className="w-full bg-obsidian-950 border border-obsidian-border hover:border-acid-lime/60 px-3 py-2 font-mono text-xs text-white focus:outline-none focus:border-acid-lime rounded-xs cursor-pointer"
+            >
+              {groups.map((group) => (
+                <optgroup key={group} label={group.toUpperCase()} className="bg-obsidian-950 text-obsidian-muted font-semibold">
+                  {allModesList
+                    .filter((m) => m.group === group)
+                    .map((m) => (
+                      <option key={m.id} value={m.id} className="bg-obsidian-900 text-white font-normal">
+                        {m.label}
+                      </option>
+                    ))}
+                </optgroup>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Cell Size */}
@@ -198,16 +238,27 @@ export const InspectorPanel: React.FC = () => {
             onChange={(val) => updateRenderParams({ density: val })}
           />
 
-          {/* Coverage */}
-          <Slider
-            label="Raster Coverage"
-            value={config.renderParams.coverage}
-            min={10}
-            max={100}
-            step={5}
-            unit="%"
-            onChange={(val) => updateRenderParams({ coverage: val })}
-          />
+          {/* Coverage (Hidden or Disabled if not supported by mode) */}
+          {coverageSupported ? (
+            <Slider
+              label="Raster Coverage"
+              value={config.renderParams.coverage}
+              min={10}
+              max={100}
+              step={5}
+              unit="%"
+              onChange={(val) => updateRenderParams({ coverage: val })}
+            />
+          ) : (
+            <div className="flex items-center justify-between py-1 opacity-40">
+              <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Raster Coverage
+              </span>
+              <span className="font-mono text-[9px] uppercase px-1.5 py-0.5 bg-obsidian-950 border border-obsidian-border text-obsidian-muted rounded-xs">
+                Fixed to Cell
+              </span>
+            </div>
+          )}
 
           {/* Edge Emphasis */}
           <Slider
@@ -244,7 +295,7 @@ export const InspectorPanel: React.FC = () => {
           </div>
 
           {/* Mode-Specific Extras */}
-          {config.mode === 'ascii' && (
+          {(config.mode === 'ascii' || config.mode === 'matrix-rain' || config.mode === 'hexdump') && (
             <div className="space-y-2 pt-2 border-t border-obsidian-border">
               <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
                 Glyph Ramp (CharSet)

@@ -50,3 +50,4 @@ export class PixelRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

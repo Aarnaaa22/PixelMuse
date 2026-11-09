@@ -58,3 +58,4 @@ export class MosaicRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

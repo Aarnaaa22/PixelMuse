@@ -60,34 +60,193 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     });
   };
 
-  const renderModesList: { id: RenderMode; name: string; tag: string; desc: string }[] = [
+  const [modesCategoryFilter, setModesCategoryFilter] = React.useState<string>('all');
+
+  const renderModesList: {
+    id: RenderMode;
+    name: string;
+    category: 'character' | 'geometric' | 'pixel' | 'pattern' | 'special' | 'retro';
+    tag: string;
+    desc: string;
+  }[] = [
+    // Character Based
+    {
+      id: 'ascii',
+      name: 'ASCII Glyph',
+      category: 'character',
+      tag: 'LINGUISTIC RASTER',
+      desc: 'Renders characters according to image brightness using customizable glyph ramps.',
+    },
+    // Geometric
     {
       id: 'mosaic',
       name: 'Mosaic',
+      category: 'geometric',
       tag: 'COLORED RECTANGLES',
       desc: 'Renders each sampled cell as a colored rectangle with coverage control.',
     },
     {
-      id: 'pixel',
-      name: 'Pixel',
-      tag: 'PIXELATED IMAGE',
-      desc: 'Renders crisp continuous pixel blocks using average sampled colors.',
-    },
-    {
-      id: 'ascii',
-      name: 'ASCII Glyph',
-      tag: 'LINGUISTIC RASTER',
-      desc: 'Renders characters according to image brightness using customizable glyph ramps.',
-    },
-    {
       id: 'dots',
       name: 'Dots',
+      category: 'geometric',
       tag: 'CIRCULAR HALFTONE',
       desc: 'Renders circular dots whose diameter and scale vary with local luminance.',
     },
     {
+      id: 'crosses',
+      name: 'Crosses',
+      category: 'geometric',
+      tag: 'GEOMETRIC CROSSES',
+      desc: 'Renders sharp geometric crosshairs scaled by cell brightness and coverage.',
+    },
+    {
+      id: 'diamonds',
+      name: 'Diamonds',
+      category: 'geometric',
+      tag: 'ROTATED RHOMBUS',
+      desc: 'Diamond polygons scaled proportionally to local luminance.',
+    },
+    {
+      id: 'hexagons',
+      name: 'Hexagons',
+      category: 'geometric',
+      tag: '6-SIDED POLYGONS',
+      desc: 'Hexagonal tessellation cells with luminance-scaled aperture.',
+    },
+    {
+      id: 'triangles',
+      name: 'Triangles',
+      category: 'geometric',
+      tag: 'ALTERNATING TILES',
+      desc: 'Alternating upward and downward triangular mesh cells.',
+    },
+    {
+      id: 'rings',
+      name: 'Rings',
+      category: 'geometric',
+      tag: 'CONCENTRIC CIRCLES',
+      desc: 'Concentric linocut rings with stroke thickness modulated by brightness.',
+    },
+    {
+      id: 'hearts',
+      name: 'Hearts',
+      category: 'geometric',
+      tag: 'PARAMETRIC GLYPHS',
+      desc: 'Smooth bezier curve heart glyphs responsive to cell brightness.',
+    },
+    {
+      id: 'stars',
+      name: 'Stars',
+      category: 'geometric',
+      tag: '5-POINTED STARS',
+      desc: 'Geometric 5-pointed star polygons scaled by luminance.',
+    },
+    {
+      id: 'bubbles',
+      name: 'Bubbles',
+      category: 'geometric',
+      tag: 'SPECULAR SPHERES',
+      desc: 'Glassy translucent spherical bubbles with 3D specular highlight reflections.',
+    },
+    {
+      id: 'hatch',
+      name: 'Hatch',
+      category: 'geometric',
+      tag: 'CROSS-HATCH ENGRAVING',
+      desc: 'Directional cross-hatch strokes simulating fine printmaker engravings.',
+    },
+    {
+      id: 'contour',
+      name: 'Contour',
+      category: 'geometric',
+      tag: 'TOPOGRAPHIC ISO-LINES',
+      desc: 'Concentric topographic elevation contours reflecting local brightness.',
+    },
+    // Pixel Based
+    {
+      id: 'pixel',
+      name: 'Pixel',
+      category: 'pixel',
+      tag: 'PIXELATED IMAGE',
+      desc: 'Renders crisp continuous pixel blocks using average sampled colors.',
+    },
+    {
+      id: 'halfblocks',
+      name: 'Halfblocks',
+      category: 'pixel',
+      tag: 'TERMINAL ▀ / ▄',
+      desc: 'Sub-samples top and bottom halves for 2x vertical pixel resolution.',
+    },
+    {
+      id: 'braille',
+      name: 'Braille',
+      category: 'pixel',
+      tag: 'UNICODE 2×4 MATRIX',
+      desc: 'Samples 8 sub-pixel threshold dots mapped to Unicode Braille glyphs.',
+    },
+    // Pattern Based
+    {
+      id: 'diagonal-lines',
+      name: 'Diagonal Lines',
+      category: 'pattern',
+      tag: '45° LINE GRATING',
+      desc: 'Diagonal line grating with thickness modulated by local luminance.',
+    },
+    {
+      id: 'lines',
+      name: 'Lines',
+      category: 'pattern',
+      tag: 'INTERLOCKING GRATE',
+      desc: 'Horizontal and vertical scanlines creating a structural CRT raster.',
+    },
+    {
+      id: 'mixed-patterns',
+      name: 'Mixed Patterns',
+      category: 'pattern',
+      tag: 'TIERED MICRO-TEXTURES',
+      desc: 'Generative mix of stipple dots, diagonal slashes, diamonds, and grids.',
+    },
+    {
+      id: 'voxels',
+      name: 'Voxels',
+      category: 'pattern',
+      tag: 'ISOMETRIC 3D RELIEF',
+      desc: 'Pseudo-3D isometric cubes with shaded top, left, and right faces.',
+    },
+    {
+      id: 'lego',
+      name: 'Lego Bricks',
+      category: 'pattern',
+      tag: 'PLASTIC BRICK STUDS',
+      desc: 'Plastic construction blocks with raised circular studs and drop shadows.',
+    },
+    // Special
+    {
+      id: 'matrix-rain',
+      name: 'Matrix Rain',
+      category: 'special',
+      tag: 'KATAKANA CODE STREAM',
+      desc: 'Animated vertical falling Katakana code rain modulated by luminance.',
+    },
+    {
+      id: 'hexdump',
+      name: 'Hexdump',
+      category: 'special',
+      tag: '00-FF BYTE DUMP',
+      desc: 'Terminal hexadecimal byte pairs derived from cell RGB brightness.',
+    },
+    {
+      id: 'disco',
+      name: 'Disco Ball',
+      category: 'special',
+      tag: 'FACETED SHIMMER',
+      desc: 'Faceted mirror tiles with dynamic chromatic reflection waves.',
+    },
+    // Retro
+    {
       id: 'dither',
       name: 'Ordered Dither',
+      category: 'retro',
       tag: '1-BIT BAYER / ATKINSON',
       desc: 'Iconic computing heritage: 8x8 Bayer matrices and Atkinson error diffusion.',
     },
@@ -354,46 +513,80 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
         {/* TAB 3: RENDER MODES */}
         {activeSidebarTab === 'modes' && (
           <div className="space-y-4">
-            <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted block pb-2 border-b border-obsidian-border">
-              Active Raster Engines
-            </span>
+            <div className="flex items-center justify-between pb-2 border-b border-obsidian-border">
+              <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Active Raster Engines
+              </span>
+              <Badge variant="outline" size="xs">
+                {renderModesList.length} MODES
+              </Badge>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap gap-1">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'geometric', label: 'Geometric' },
+                { id: 'pixel', label: 'Pixel' },
+                { id: 'pattern', label: 'Pattern' },
+                { id: 'special', label: 'Special' },
+                { id: 'character', label: 'Text' },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setModesCategoryFilter(cat.id)}
+                  className={cn(
+                    'px-2 py-0.5 font-mono text-[9px] uppercase tracking-wider rounded-xs border transition-colors',
+                    modesCategoryFilter === cat.id
+                      ? 'border-acid-lime text-white bg-obsidian-950 font-semibold'
+                      : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
 
             <div className="space-y-2.5">
-              {renderModesList.map((mode) => {
-                const isActive = config.mode === mode.id;
-                return (
-                  <button
-                    key={mode.id}
-                    onClick={() => setMode(mode.id)}
-                    className={cn(
-                      'w-full p-3 text-left border rounded-xs transition-all flex flex-col space-y-1.5',
-                      isActive
-                        ? 'border-acid-lime bg-obsidian-950 shadow-crisp-border'
-                        : 'border-obsidian-border bg-obsidian-950 hover:border-obsidian-border-hover'
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={cn(
-                          'font-mono text-xs uppercase font-semibold transition-colors',
-                          isActive ? 'text-acid-lime' : 'text-white'
-                        )}
-                      >
-                        {mode.name}
+              {renderModesList
+                .filter(
+                  (m) => modesCategoryFilter === 'all' || m.category === modesCategoryFilter
+                )
+                .map((mode) => {
+                  const isActive = config.mode === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      onClick={() => setMode(mode.id)}
+                      className={cn(
+                        'w-full p-2.5 text-left border rounded-xs transition-all flex flex-col space-y-1',
+                        isActive
+                          ? 'border-acid-lime bg-obsidian-950 shadow-crisp-border'
+                          : 'border-obsidian-border bg-obsidian-950 hover:border-obsidian-border-hover'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={cn(
+                            'font-mono text-xs uppercase font-semibold transition-colors',
+                            isActive ? 'text-acid-lime' : 'text-white'
+                          )}
+                        >
+                          {mode.name}
+                        </span>
+                        {isActive && <span className="w-1.5 h-1.5 rounded-full bg-acid-lime shadow-active-lime" />}
+                      </div>
+
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-obsidian-muted">
+                        {mode.tag}
                       </span>
-                      {isActive && <span className="w-1.5 h-1.5 rounded-full bg-acid-lime shadow-active-lime" />}
-                    </div>
 
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-obsidian-muted">
-                      {mode.tag}
-                    </span>
-
-                    <p className="font-mono text-2xs text-obsidian-text leading-relaxed">
-                      {mode.desc}
-                    </p>
-                  </button>
-                );
-              })}
+                      <p className="font-mono text-2xs text-obsidian-text leading-relaxed">
+                        {mode.desc}
+                      </p>
+                    </button>
+                  );
+                })}
             </div>
           </div>
         )}
