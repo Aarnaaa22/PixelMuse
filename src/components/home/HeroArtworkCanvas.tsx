@@ -1,12 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { BAYER_8X8 } from '../../utilities';
+import { createSamplePhotoCanvas } from '../../utilities/samplePhotos';
 
-type HeroMode = 'composite' | 'ascii' | 'dither' | 'geometry';
+type HeroMode = 'transform' | 'ascii' | 'dots' | 'pixel' | 'dither';
 
 export const HeroArtworkCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [activeMode, setActiveMode] = useState<HeroMode>('composite');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeMode, setActiveMode] = useState<HeroMode>('transform');
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Cached sample photo canvas
+  const photoCanvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    photoCanvasRef.current = createSamplePhotoCanvas('marble-sculpture');
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,191 +33,188 @@ export const HeroArtworkCanvas: React.FC = () => {
       const w = canvas.width;
       const h = canvas.height;
 
-      // Clear with obsidian background
+      // 1. Draw Obsidian background base
       ctx.fillStyle = '#08080A';
       ctx.fillRect(0, 0, w, h);
 
+      const photo = photoCanvasRef.current;
       const mx = mousePos.x * w;
       const my = mousePos.y * h;
 
-      // Base: Multi-tier atmospheric glow
-      const ambientGlow = ctx.createRadialGradient(
-        mx * 0.4 + w * 0.3,
-        my * 0.4 + h * 0.3,
-        20,
-        w * 0.5,
-        h * 0.5,
-        w * 0.7
-      );
-      ambientGlow.addColorStop(0, 'rgba(157, 78, 221, 0.4)');
-      ambientGlow.addColorStop(0.45, 'rgba(204, 255, 0, 0.15)');
-      ambientGlow.addColorStop(0.75, 'rgba(255, 71, 58, 0.1)');
-      ambientGlow.addColorStop(1, 'rgba(8, 8, 10, 0)');
-      ctx.fillStyle = ambientGlow;
-      ctx.fillRect(0, 0, w, h);
+      // 2. Draw procedural subject if available
+      if (photo) {
+        ctx.save();
+        ctx.drawImage(photo, 0, 0, w, h);
+        ctx.restore();
+      }
 
-      // Layer 1: Distorted Monumental Typographic Matrix ("PIXELMUSE")
-      ctx.save();
-      ctx.font = '900 120px "Syne", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      // Dynamic split progress: oscillates or follows cursor
+      let splitX = isHovering ? mx : ((Math.sin(time * 0.8) + 1) / 2) * (w * 0.7) + w * 0.15;
+      if (activeMode !== 'transform') {
+        splitX = w; // Full coverage for specific mode
+      }
 
-      // Ghost typographic displacement
-      const shiftX = Math.sin(time * 1.5) * 8;
-      const shiftY = Math.cos(time * 1.2) * 5;
+      // 3. Render Generative Overlay based on mode
+      const renderGenerativeLayer = () => {
+        const effectiveMode = activeMode === 'transform' ? 'composite' : activeMode;
 
-      ctx.fillStyle = 'rgba(255, 71, 58, 0.25)';
-      ctx.fillText('PIXELMUSE', w / 2 - 4 + shiftX, h / 2 + shiftY);
+        // A. ASCII Glyph Matrix
+        if (effectiveMode === 'composite' || effectiveMode === 'ascii') {
+          const glyphs = ' .:-=+*#%@$░▒▓█';
+          const cellSize = 12;
+          const cols = Math.floor(w / cellSize);
+          const rows = Math.floor(h / cellSize);
 
-      ctx.fillStyle = 'rgba(204, 255, 0, 0.35)';
-      ctx.fillText('PIXELMUSE', w / 2 + 4 - shiftX, h / 2 - shiftY);
+          ctx.font = '10px "JetBrains Mono", monospace';
+          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
 
-      ctx.fillStyle = '#EDEDF2';
-      ctx.fillText('PIXELMUSE', w / 2, h / 2);
-      ctx.restore();
+          // Render glyphs within transformed sector
+          const startCol = activeMode === 'transform' ? Math.floor(splitX / cellSize) : 0;
+          for (let r = 0; r < rows; r++) {
+            const py = r * cellSize + cellSize / 2;
+            for (let c = startCol; c < cols; c++) {
+              const px = c * cellSize + cellSize / 2;
 
-      // Layer 2: Geometric Monolith Forms (Asymmetrical Sculptural Diamond & Rings)
-      const cx = w * 0.5;
-      const cy = h * 0.5;
+              // Distance from focal point
+              const dx = (px - w * 0.5) / (w * 0.5);
+              const dy = (py - h * 0.5) / (h * 0.5);
+              const dist = Math.sqrt(dx * dx + dy * dy);
 
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(time * 0.15 + (mousePos.x - 0.5) * 0.5);
+              // Harmonic luma wave
+              const wave = Math.sin(px * 0.02 + py * 0.02 + time * 3);
+              const luma = (wave + 1) * 0.5;
+              const gIdx = Math.min(glyphs.length - 1, Math.max(0, Math.floor(luma * glyphs.length)));
+              const char = glyphs[gIdx];
 
-      // Neon Acid Lime razor ring
-      ctx.strokeStyle = '#CCFF00';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, 160 + Math.sin(time * 3) * 6, 0, Math.PI * 1.4);
-      ctx.stroke();
-
-      // Signal Coral counter-ring
-      ctx.strokeStyle = '#FF473A';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(0, 0, 190, Math.PI * 0.8, Math.PI * 2.2);
-      ctx.stroke();
-
-      // Electric Violet inner polygon
-      ctx.fillStyle = 'rgba(157, 78, 221, 0.18)';
-      ctx.strokeStyle = '#9D4EDD';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.rect(-70, -70, 140, 140);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-
-      // Layer 3: Dynamic ASCII Glyph Overlay (Scanning Matrix)
-      if (activeMode === 'composite' || activeMode === 'ascii') {
-        const glyphs = ' .:+=*#%@░▒▓█';
-        const fontSize = 11;
-        ctx.font = `${fontSize}px "JetBrains Mono", monospace`;
-
-        const cols = Math.floor(w / fontSize);
-        const rows = Math.floor(h / (fontSize * 1.2));
-
-        for (let r = 0; r < rows; r += 2) {
-          const y = r * fontSize * 1.2;
-          const distY = Math.abs(y - cy) / (h * 0.5);
-
-          for (let c = 0; c < cols; c += 2) {
-            const x = c * fontSize;
-            const distX = Math.abs(x - cx) / (w * 0.5);
-            const dist = Math.sqrt(distX * distX + distY * distY);
-
-            // Selective ASCII density band
-            if (dist > 0.35 && dist < 0.95) {
-              const wave = Math.sin(x * 0.03 + y * 0.03 + time * 3);
-              if (wave > 0.1) {
-                const charIdx = Math.floor(((wave + 1) / 2) * glyphs.length) % glyphs.length;
-                const char = glyphs[charIdx];
-
-                if (dist < 0.6) {
-                  ctx.fillStyle = 'rgba(204, 255, 0, 0.7)';
-                } else if (dist < 0.8) {
-                  ctx.fillStyle = 'rgba(157, 78, 221, 0.8)';
-                } else {
-                  ctx.fillStyle = 'rgba(255, 71, 58, 0.6)';
-                }
-
-                ctx.fillText(char, x, y);
+              if (dist < 0.45) {
+                ctx.fillStyle = '#CCFF00'; // Acid lime core
+              } else if (dist < 0.75) {
+                ctx.fillStyle = '#9D4EDD'; // Electric violet
+              } else {
+                ctx.fillStyle = '#FF473A'; // Signal coral
               }
+
+              ctx.fillText(char, px, py);
             }
           }
         }
-      }
 
-      // Layer 4: 8x8 Bayer Dithering Diagonal Shard
-      if (activeMode === 'composite' || activeMode === 'dither') {
-        const shardW = Math.floor(w * 0.38);
-        const shardH = Math.floor(h * 0.42);
-        const shardX = Math.floor(w * 0.58);
-        const shardY = Math.floor(h * 0.5);
+        // B. Luminous Dots / Bloom
+        if (effectiveMode === 'dots') {
+          const cellSize = 14;
+          const cols = Math.floor(w / cellSize);
+          const rows = Math.floor(h / cellSize);
 
-        const ditherCanvas = document.createElement('canvas');
-        ditherCanvas.width = shardW;
-        ditherCanvas.height = shardH;
-        const dctx = ditherCanvas.getContext('2d');
+          for (let r = 0; r < rows; r++) {
+            const py = r * cellSize + cellSize / 2;
+            for (let c = 0; c < cols; c++) {
+              const px = c * cellSize + cellSize / 2;
+              const wave = Math.sin(px * 0.03 - py * 0.02 + time * 2);
+              const radius = Math.max(1, ((wave + 1) / 2) * 6);
 
-        if (dctx) {
-          const imgData = dctx.createImageData(shardW, shardH);
-          const data = imgData.data;
+              ctx.fillStyle = wave > 0.3 ? '#CCFF00' : 'rgba(157, 78, 221, 0.7)';
+              ctx.beginPath();
+              ctx.arc(px, py, radius, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        // C. Quantized Pixel Blocks
+        if (effectiveMode === 'pixel') {
+          const size = 16;
+          for (let y = 0; y < h; y += size) {
+            for (let x = 0; x < w; x += size) {
+              const wave = Math.sin((x + y) * 0.02 + time * 2.5);
+              ctx.fillStyle = wave > 0.4 ? '#CCFF00' : wave > 0 ? '#1F1F28' : '#08080A';
+              ctx.fillRect(x, y, size - 1, size - 1);
+            }
+          }
+        }
+
+        // D. 1-Bit Bayer 8x8 Dithering Shard
+        if (effectiveMode === 'composite' || effectiveMode === 'dither') {
+          const shardW = Math.floor(w * 0.4);
+          const shardH = Math.floor(h * 0.45);
+          const shardX = Math.floor(w * 0.55);
+          const shardY = Math.floor(h * 0.45);
+
           const matrix = BAYER_8X8;
+          ctx.fillStyle = '#CCFF00';
 
-          for (let dy = 0; dy < shardH; dy++) {
-            const my = Math.floor(dy / 2) % 8;
-            for (let dx = 0; dx < shardW; dx++) {
-              const mx = Math.floor(dx / 2) % 8;
-              const threshold = matrix[my][mx];
+          for (let dy = 0; dy < shardH; dy += 3) {
+            const bY = Math.floor(dy / 3) % 8;
+            for (let dx = 0; dx < shardW; dx += 3) {
+              const bX = Math.floor(dx / 3) % 8;
+              const threshold = matrix[bY][bX];
+              const grad = (dx / shardW) * 0.7 + (dy / shardH) * 0.3;
 
-              const lum = (dx / shardW) * 0.7 + (dy / shardH) * 0.3;
-              const isDot = lum > threshold;
-
-              const idx = (dy * shardW + dx) * 4;
-              if (isDot) {
-                data[idx] = 204;     // Acid lime dither dots
-                data[idx + 1] = 255;
-                data[idx + 2] = 0;
-                data[idx + 3] = 180;
+              if (grad > threshold) {
+                ctx.fillRect(shardX + dx, shardY + dy, 2, 2);
               }
             }
           }
-          dctx.putImageData(imgData, 0, 0);
-          ctx.drawImage(ditherCanvas, shardX, shardY);
         }
+      };
+
+      // 4. Clip or draw generative layer
+      if (activeMode === 'transform') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(splitX, 0, w - splitX, h);
+        ctx.clip();
+        renderGenerativeLayer();
+        ctx.restore();
+
+        // High-contrast razor divider line with neon glow
+        ctx.strokeStyle = '#CCFF00';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#CCFF00';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(splitX, 0);
+        ctx.lineTo(splitX, h);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Split marker icon at center of divider
+        ctx.fillStyle = '#CCFF00';
+        ctx.fillRect(splitX - 3, h / 2 - 16, 6, 32);
+      } else {
+        renderGenerativeLayer();
       }
 
-      // Layer 5: Cathode Ray Tube Scanline Drift
-      const scanY = (time * 120) % h;
+      // 5. Restrained Cathode Scanline Sweep
+      const scanY = (time * 90) % h;
       ctx.fillStyle = 'rgba(204, 255, 0, 0.08)';
       ctx.fillRect(0, scanY, w, 2);
 
       // Fine subpixel screen mesh lines
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
       for (let y = 0; y < h; y += 4) {
         ctx.fillRect(0, y, w, 1);
       }
 
-      // Precision technical HUD overlay marks
+      // 6. Technical HUD Diagnostic Overlay
       ctx.save();
       ctx.font = '10px "JetBrains Mono", monospace';
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.fillText(`LOC: [${Math.round(mx)}, ${Math.round(my)}]`, 20, 30);
-      ctx.fillText(`MOD: ${activeMode.toUpperCase()}`, 20, 46);
-      ctx.fillText(`FPS: 60.0`, w - 80, 30);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.fillText(`LOC: [${Math.round(mx)}, ${Math.round(my)}]`, 20, 28);
+      ctx.fillText(`MODE: ${activeMode.toUpperCase()}`, 20, 44);
+      ctx.fillText(`FPS: 60`, w - 75, 28);
 
-      // Crosshairs
-      ctx.strokeStyle = 'rgba(204, 255, 0, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(mx - 8, my);
-      ctx.lineTo(mx + 8, my);
-      ctx.moveTo(mx, my - 8);
-      ctx.lineTo(mx, my + 8);
-      ctx.stroke();
-
+      // Interactive crosshair cursor tracking
+      if (isHovering) {
+        ctx.strokeStyle = 'rgba(204, 255, 0, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(mx - 8, my);
+        ctx.lineTo(mx + 8, my);
+        ctx.moveTo(mx, my - 8);
+        ctx.lineTo(mx, my + 8);
+        ctx.stroke();
+      }
       ctx.restore();
 
       rafId = requestAnimationFrame(render);
@@ -218,51 +225,54 @@ export const HeroArtworkCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [activeMode, mousePos]);
+  }, [activeMode, mousePos, isHovering]);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePos({
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height,
+      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
     });
-  };
+  }, []);
 
   return (
     <div
+      ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative w-full aspect-[4/3] md:aspect-[16/10] bg-obsidian-950 border border-obsidian-border overflow-hidden shadow-2xl group select-none"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-obsidian-950 border border-obsidian-border rounded-xs overflow-hidden shadow-2xl group select-none max-w-full"
     >
       <canvas
         ref={canvasRef}
-        width={800}
-        height={500}
+        width={720}
+        height={480}
         className="w-full h-full object-cover block"
       />
 
       {/* Mode Switcher Interactive Badges */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-obsidian-950/80 border border-obsidian-border p-1 backdrop-blur-md rounded-xs">
-        {(['composite', 'ascii', 'dither', 'geometry'] as HeroMode[]).map((mode) => (
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-obsidian-950/85 border border-obsidian-border p-1 backdrop-blur-md rounded-xs">
+        {(['transform', 'ascii', 'dots', 'pixel', 'dither'] as HeroMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => setActiveMode(mode)}
-            className={`font-mono text-2xs uppercase px-2 py-1 rounded-xs transition-colors border ${
+            className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded-xs transition-colors border ${
               activeMode === mode
-                ? 'border-acid-lime text-acid-lime bg-acid-lime/10'
+                ? 'border-acid-lime text-acid-lime bg-acid-lime/10 font-bold'
                 : 'border-transparent text-obsidian-muted hover:text-white'
             }`}
           >
-            {mode}
+            {mode === 'transform' ? 'WAVE' : mode}
           </button>
         ))}
       </div>
 
-      {/* Floating Art Diagnostic Pill */}
-      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 bg-obsidian-950/80 border border-obsidian-border px-3 py-1.5 backdrop-blur-md rounded-xs font-mono text-2xs text-obsidian-muted">
+      {/* Floating Status Diagnostics Pill */}
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2 bg-obsidian-950/85 border border-obsidian-border px-3 py-1 backdrop-blur-md rounded-xs font-mono text-2xs text-obsidian-muted">
         <span className="w-1.5 h-1.5 rounded-full bg-acid-lime animate-pulse" />
-        <span className="text-white">LIVE RASTER CORE</span>
+        <span className="text-white font-medium">LIVE RASTER CORE</span>
         <span className="text-obsidian-border">/</span>
-        <span>INTERACTIVE CANVAS 2D</span>
+        <span>HTML CANVAS 2D</span>
       </div>
     </div>
   );

@@ -40,6 +40,11 @@ export const CanvasStage: React.FC = () => {
     setSplitPosition,
   } = useStudioStore();
 
+  const originalImageSrc = React.useMemo(() => {
+    if (!sourceImage) return '';
+    return 'src' in sourceImage ? sourceImage.src : (sourceImage as HTMLCanvasElement).toDataURL();
+  }, [sourceImage]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 0 || e.button === 1 || e.altKey) {
       setIsPanning(true);
@@ -177,7 +182,7 @@ export const CanvasStage: React.FC = () => {
               style={{ width: `${splitPosition}%` }}
             >
               <img
-                src={'src' in sourceImage ? sourceImage.src : (sourceImage as HTMLCanvasElement).toDataURL()}
+                src={originalImageSrc}
                 alt="Original Raw Sensor"
                 className="w-full h-full object-cover max-w-none"
                 style={{

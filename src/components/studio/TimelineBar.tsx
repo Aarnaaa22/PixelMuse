@@ -108,10 +108,10 @@ export const TimelineBar: React.FC = () => {
           {[0.5, 1, 1.5, 2].map((spd) => (
             <button
               key={spd}
-              onClick={() => updateMotionConfig({ speed: spd })}
+              onClick={() => updateMotionConfig({ speed: spd, animSpeed: spd })}
               className={cn(
                 'px-1.5 py-0.5 rounded-xs border uppercase text-[10px]',
-                speed === spd
+                (speed === spd || config.motion.animSpeed === spd)
                   ? 'border-acid-lime text-acid-lime bg-acid-lime/10 font-semibold'
                   : 'border-obsidian-border text-obsidian-muted hover:text-white'
               )}
