@@ -8,7 +8,7 @@ export const RootLayout: React.FC = () => {
   const isStudio = location.pathname.startsWith('/studio');
 
   return (
-    <div className="min-h-screen bg-obsidian text-obsidian-heading flex flex-col font-sans selection:bg-electric-violet selection:text-white overflow-hidden">
+    <div className={`min-h-screen bg-obsidian text-obsidian-heading flex flex-col font-sans selection:bg-electric-violet selection:text-white ${isStudio ? 'overflow-hidden' : 'overflow-x-hidden'}`}>
       <NoiseOverlay />
 
       {/* Global Top Navigation Bar (Hidden when inside Studio Workspace) */}
@@ -20,7 +20,7 @@ export const RootLayout: React.FC = () => {
       )}
 
       {/* Primary Content Outlet */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className={`flex-1 flex flex-col ${isStudio ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         <Outlet />
       </main>
     </div>

@@ -76,6 +76,14 @@ export const StatusFooter: React.FC<StatusFooterProps> = ({ className }) => {
         <span className="text-obsidian-muted">
           OUTPUT: {stats.canvasWidth}×{stats.canvasHeight}
         </span>
+
+        <span className="text-obsidian-border">/</span>
+
+        <div className="flex items-center gap-1.5 font-bold">
+          <span className="font-mono text-2xs font-black tracking-wider text-[#FF1493] drop-shadow-[0_0_10px_rgba(255,20,147,0.85)]">
+            ★ Aarna Chopdekar
+          </span>
+        </div>
       </div>
     </footer>
   );

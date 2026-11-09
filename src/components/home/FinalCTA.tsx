@@ -57,6 +57,16 @@ export const FinalCTA: React.FC = () => {
           <span className="text-obsidian-border">•</span>
           <span>PRIVACY PRESERVED</span>
         </div>
+
+        {/* Studio Credits */}
+        <div className="pt-6 border-t border-obsidian-border/50 w-full flex items-center justify-center gap-2.5">
+          <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+            STUDIO CREDITS:
+          </span>
+          <span className="font-mono text-sm sm:text-base font-black tracking-wider text-[#FF1493] drop-shadow-[0_0_14px_rgba(255,20,147,0.9)]">
+            ★ Aarna Chopdekar
+          </span>
+        </div>
       </div>
     </section>
   );

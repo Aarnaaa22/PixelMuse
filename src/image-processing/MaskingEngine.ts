@@ -79,3 +79,4 @@ export class MaskingEngine {
     targetCtx.putImageData(targetData, 0, 0);
   }
 }
+

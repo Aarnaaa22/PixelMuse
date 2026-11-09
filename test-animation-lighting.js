@@ -188,3 +188,4 @@ assert(blended === generativePixel, 'Inverted mask successfully conceals photo o
 console.log('\n-----------------------------------------------------------');
 console.log(`SUMMARY: ${passedTests} / ${totalTests} test cases passed (100% success rate).`);
 console.log('-----------------------------------------------------------');
+
