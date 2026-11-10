@@ -36,6 +36,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     imageMetadata,
     setSourceImage,
     clearImage,
+    resetViewport,
     config,
     setMode,
     updateConfig,
@@ -328,20 +329,27 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
 
             {/* Current Loaded Image Info */}
             {sourceImage && imageMetadata && (
-              <div className="border border-obsidian-border bg-obsidian-subtle p-3 space-y-2">
+              <div
+                onClick={() => resetViewport()}
+                className="border border-obsidian-border hover:border-acid-lime/70 bg-obsidian-subtle p-3 space-y-2 cursor-pointer transition-all duration-150 group rounded-xs"
+                title="Click to center active photograph in main workspace"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                  <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted group-hover:text-acid-lime transition-colors">
                     ACTIVE PHOTOGRAPH
                   </span>
                   <button
-                    onClick={clearImage}
-                    className="text-obsidian-muted hover:text-signal-coral"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearImage();
+                    }}
+                    className="text-obsidian-muted hover:text-signal-coral p-1 -mr-1"
                     title="Unload Image"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="font-mono text-xs text-white truncate font-medium">
+                <div className="font-mono text-xs text-white truncate font-medium group-hover:text-acid-lime transition-colors">
                   {imageMetadata.name}
                 </div>
                 <div className="flex items-center gap-2 font-mono text-2xs text-obsidian-muted">

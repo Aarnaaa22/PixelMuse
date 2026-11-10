@@ -27,12 +27,16 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
     return () => {
       pipelineRef.current?.detach();
     };
-  }, [canvasRef]);
+  }, [canvasRef, sourceImage]);
 
   // Main render function
   const renderFrame = useCallback(
     (time = 0) => {
-      if (!pipelineRef.current || !sourceImage || !canvasRef.current) return;
+      const canvas = canvasRef.current;
+      if (!pipelineRef.current || !sourceImage || !canvas) return;
+
+      // Always guarantee the target canvas is attached before pipeline execution
+      pipelineRef.current.attach(canvas);
 
       const width =
         ('naturalWidth' in sourceImage ? sourceImage.naturalWidth : sourceImage.width) || 640;

@@ -3,7 +3,16 @@ export async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = async () => {
+        try {
+          if ('decode' in img) {
+            await img.decode();
+          }
+        } catch {
+          // Fall back gracefully if decode() fails or is unsupported
+        }
+        resolve(img);
+      };
       img.onerror = () => reject(new Error('Failed to load image file'));
       img.src = reader.result as string;
     };

@@ -11,6 +11,7 @@ import {
 import { IconButton, Button, Badge } from '../ui';
 import { useCanvasRender, useImageDrop } from '../../hooks';
 import { useStudioStore } from '../../stores';
+import { cn } from '../../utilities';
 import { SAMPLE_PHOTOS, createSamplePhotoCanvas } from '../../utilities/samplePhotos';
 
 export const CanvasStage: React.FC = () => {
@@ -161,50 +162,51 @@ export const CanvasStage: React.FC = () => {
       )}
 
       {/* 2. IMAGE PREVIEW & CANVAS VIEWPORT */}
-      {sourceImage && (
-        <div
-          className="relative transition-transform duration-75 shadow-2xl"
-          style={{
-            transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
-            transformOrigin: 'center center',
-          }}
-        >
-          {/* Main Rendering Canvas */}
-          <canvas
-            ref={canvasRef}
-            className="border border-obsidian-border bg-obsidian block max-w-none shadow-crisp-border"
-          />
+      <div
+        className={cn(
+          "relative transition-transform duration-75 shadow-2xl",
+          !sourceImage && "hidden"
+        )}
+        style={{
+          transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
+          transformOrigin: 'center center',
+        }}
+      >
+        {/* Main Rendering Canvas */}
+        <canvas
+          ref={canvasRef}
+          className="border border-obsidian-border bg-obsidian block max-w-none shadow-crisp-border"
+        />
 
-          {/* Before/After Split Comparison View */}
-          {isSplitView && (
-            <div
-              className="absolute inset-0 overflow-hidden border-r-2 border-acid-lime pointer-events-none"
-              style={{ width: `${splitPosition}%` }}
-            >
-              <img
-                src={originalImageSrc}
-                alt="Original Raw Sensor"
-                className="w-full h-full object-cover max-w-none"
-                style={{
-                  width: canvasRef.current?.width || '100%',
-                  height: canvasRef.current?.height || '100%',
-                }}
-              />
+        {/* Before/After Split Comparison View */}
+        {isSplitView && sourceImage && (
+          <div
+            className="absolute inset-0 overflow-hidden border-r-2 border-acid-lime pointer-events-none"
+            style={{ width: `${splitPosition}%` }}
+          >
+            <img
+              src={originalImageSrc}
+              alt="Original Raw Sensor"
+              className="w-full h-full object-cover max-w-none"
+              style={{
+                width: canvasRef.current?.width || '100%',
+                height: canvasRef.current?.height || '100%',
+              }}
+            />
 
-              {/* Tag Overlays */}
-              <div className="absolute top-3 left-3 bg-obsidian-950/80 border border-obsidian-border px-2 py-0.5 font-mono text-2xs text-white">
-                ORIGINAL PHOTO
-              </div>
+            {/* Tag Overlays */}
+            <div className="absolute top-3 left-3 bg-obsidian-950/80 border border-obsidian-border px-2 py-0.5 font-mono text-2xs text-white">
+              ORIGINAL PHOTO
             </div>
-          )}
+          </div>
+        )}
 
-          {isSplitView && (
-            <div className="absolute top-3 right-3 bg-obsidian-950/80 border border-acid-lime/50 px-2 py-0.5 font-mono text-2xs text-acid-lime pointer-events-none">
-              GENERATIVE MATRIX
-            </div>
-          )}
-        </div>
-      )}
+        {isSplitView && sourceImage && (
+          <div className="absolute top-3 right-3 bg-obsidian-950/80 border border-acid-lime/50 px-2 py-0.5 font-mono text-2xs text-acid-lime pointer-events-none">
+            GENERATIVE MATRIX
+          </div>
+        )}
+      </div>
 
       {/* Split Comparison Slider Controller (When Split View Active) */}
       {isSplitView && sourceImage && (

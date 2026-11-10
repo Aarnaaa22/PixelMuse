@@ -102,6 +102,8 @@ export function useImageDrop() {
       if (e.target.files && e.target.files.length > 0) {
         processFile(e.target.files[0]);
       }
+      // Reset input value so selecting the same file consecutively triggers onChange
+      e.target.value = '';
     },
     [processFile]
   );

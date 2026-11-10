@@ -117,6 +117,7 @@ export class CanvasPipeline {
   }
 
   attach(canvas: HTMLCanvasElement): void {
+    if (this.targetCanvas === canvas && this.targetCtx) return;
     this.targetCanvas = canvas;
     this.targetCtx = canvas.getContext('2d', { alpha: true });
   }
