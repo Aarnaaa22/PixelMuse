@@ -10,6 +10,7 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
     config,
     sourceImage,
     setStats,
+    setUploadError,
   } = useStudioStore();
 
   // Initialize pipeline
@@ -43,10 +44,15 @@ export function useCanvasRender(canvasRef: React.RefObject<HTMLCanvasElement>) {
       const height =
         ('naturalHeight' in sourceImage ? sourceImage.naturalHeight : sourceImage.height) || 640;
 
-      const stats = pipelineRef.current.execute(sourceImage, width, height, config, time);
-      setStats(stats);
+      try {
+        const stats = pipelineRef.current.execute(sourceImage, width, height, config, time);
+        setStats(stats);
+      } catch (renderErr: any) {
+        console.error('[PixelMuse Canvas Render Failure]:', renderErr);
+        setUploadError(`Canvas rendering failure: ${renderErr?.message || 'Unexpected drawing error'}`);
+      }
     },
-    [sourceImage, config, canvasRef, setStats]
+    [sourceImage, config, canvasRef, setStats, setUploadError]
   );
 
   // Render on static config changes

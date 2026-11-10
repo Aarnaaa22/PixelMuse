@@ -231,6 +231,13 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     },
     // Special
     {
+      id: 'original',
+      name: 'Original (Raw Sensor)',
+      category: 'special',
+      tag: 'PRISTINE SOURCE',
+      desc: 'Displays the original un-rasterized photograph with accurate Rec.709 color fidelity.',
+    },
+    {
       id: 'matrix-rain',
       name: 'Matrix Rain',
       category: 'special',
@@ -271,7 +278,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
         onChange={onFileInputChange}
         className="hidden"
       />
@@ -317,7 +324,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
                 Drop Photograph Here
               </span>
               <span className="font-mono text-2xs text-obsidian-muted mt-1">
-                PNG, JPEG, WebP up to 32MB
+                PNG, JPEG, WebP up to 40MB
               </span>
 
               <div className="mt-4">

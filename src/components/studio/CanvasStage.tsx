@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import {
   ZoomIn,
   ZoomOut,
@@ -7,6 +7,8 @@ import {
   SplitSquareVertical,
   RotateCcw,
   ArrowRight,
+  AlertCircle,
+  Eye,
 } from 'lucide-react';
 import { IconButton, Button, Badge } from '../ui';
 import { useCanvasRender, useImageDrop } from '../../hooks';
@@ -21,13 +23,20 @@ export const CanvasStage: React.FC = () => {
 
   const [isPanning, setIsPanning] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
   useCanvasRender(canvasRef);
   const { isDragging, onDragOver, onDragLeave, onDrop, onFileInputChange } = useImageDrop();
 
   const {
     sourceImage,
+    imageMetadata,
     setSourceImage,
+    config,
+    setMode,
+    uploadError,
+    setUploadError,
+    isImageLoading,
     zoom,
     setZoom,
     panX,
@@ -41,7 +50,72 @@ export const CanvasStage: React.FC = () => {
     setSplitPosition,
   } = useStudioStore();
 
-  const originalImageSrc = React.useMemo(() => {
+  // Track viewport container dimensions to maintain contain-style scaling
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      setViewportSize({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setViewportSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Calculate contain-style fitting dimensions:
+  // Preserves aspect ratio, fits within viewport, never stretched, never cropped, remains centered.
+  const fitDimensions = useMemo(() => {
+    if (!sourceImage || viewportSize.width === 0 || viewportSize.height === 0) {
+      const w = imageMetadata?.width || 640;
+      const h = imageMetadata?.height || 640;
+      return { width: w, height: h };
+    }
+
+    const srcW =
+      ('naturalWidth' in sourceImage ? sourceImage.naturalWidth : sourceImage.width) ||
+      imageMetadata?.width ||
+      640;
+    const srcH =
+      ('naturalHeight' in sourceImage ? sourceImage.naturalHeight : sourceImage.height) ||
+      imageMetadata?.height ||
+      640;
+
+    if (srcW <= 0 || srcH <= 0) return { width: 640, height: 640 };
+
+    const aspect = srcW / srcH;
+    // 64px padding to guarantee breathing room in the stage
+    const maxW = Math.max(160, viewportSize.width - 64);
+    const maxH = Math.max(160, viewportSize.height - 64);
+
+    let w = maxW;
+    let h = maxW / aspect;
+
+    if (h > maxH) {
+      h = maxH;
+      w = maxH * aspect;
+    }
+
+    return {
+      width: Math.round(w),
+      height: Math.round(h),
+    };
+  }, [sourceImage, imageMetadata, viewportSize]);
+
+  const originalImageSrc = useMemo(() => {
     if (!sourceImage) return '';
     return 'src' in sourceImage ? sourceImage.src : (sourceImage as HTMLCanvasElement).toDataURL();
   }, [sourceImage]);
@@ -97,10 +171,46 @@ export const CanvasStage: React.FC = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
         onChange={onFileInputChange}
         className="hidden"
       />
+
+      {/* ERROR ALERT BANNER */}
+      {uploadError && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 max-w-lg w-full mx-4 p-4 bg-obsidian-surface border-2 border-signal-coral shadow-2xl flex items-start gap-3 backdrop-blur-md rounded-xs">
+          <AlertCircle className="w-5 h-5 text-signal-coral flex-shrink-0 mt-0.5" />
+          <div className="flex-1 space-y-1">
+            <div className="font-mono text-2xs uppercase tracking-wider text-signal-coral font-bold flex items-center justify-between">
+              <span>UPLOAD / RENDERING ERROR</span>
+            </div>
+            <p className="font-mono text-xs text-white leading-relaxed">
+              {uploadError}
+            </p>
+          </div>
+          <button
+            onClick={() => setUploadError(null)}
+            className="text-obsidian-muted hover:text-white text-xs font-mono px-2 py-1 border border-obsidian-border bg-obsidian-950 transition-colors"
+          >
+            DISMISS
+          </button>
+        </div>
+      )}
+
+      {/* ASYNCHRONOUS DECODING LOADING OVERLAY */}
+      {isImageLoading && (
+        <div className="absolute inset-0 z-50 bg-obsidian-950/85 backdrop-blur-sm flex flex-col items-center justify-center space-y-4">
+          <div className="w-12 h-12 border-2 border-acid-lime border-t-transparent rounded-full animate-spin" />
+          <div className="text-center space-y-1">
+            <span className="font-mono text-xs uppercase tracking-widest text-acid-lime font-bold block">
+              Decoding Photographic Sensor...
+            </span>
+            <span className="font-mono text-2xs text-obsidian-muted block">
+              Parsing bitstream & calculating contain viewport matrix
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 1. EMPTY UPLOAD STATE */}
       {!sourceImage && (
@@ -164,10 +274,12 @@ export const CanvasStage: React.FC = () => {
       {/* 2. IMAGE PREVIEW & CANVAS VIEWPORT */}
       <div
         className={cn(
-          "relative transition-transform duration-75 shadow-2xl",
+          "relative transition-transform duration-75 shadow-2xl flex-shrink-0",
           !sourceImage && "hidden"
         )}
         style={{
+          width: `${fitDimensions.width}px`,
+          height: `${fitDimensions.height}px`,
           transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
           transformOrigin: 'center center',
         }}
@@ -175,6 +287,10 @@ export const CanvasStage: React.FC = () => {
         {/* Main Rendering Canvas */}
         <canvas
           ref={canvasRef}
+          style={{
+            width: `${fitDimensions.width}px`,
+            height: `${fitDimensions.height}px`,
+          }}
           className="border border-obsidian-border bg-obsidian block max-w-none shadow-crisp-border"
         />
 
@@ -189,8 +305,8 @@ export const CanvasStage: React.FC = () => {
               alt="Original Raw Sensor"
               className="w-full h-full object-cover max-w-none"
               style={{
-                width: canvasRef.current?.width || '100%',
-                height: canvasRef.current?.height || '100%',
+                width: `${fitDimensions.width}px`,
+                height: `${fitDimensions.height}px`,
               }}
             />
 
@@ -229,6 +345,28 @@ export const CanvasStage: React.FC = () => {
       {/* Floating Viewport Controls (Bottom Right) */}
       {sourceImage && (
         <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 bg-obsidian-surface/95 border border-obsidian-border p-1 rounded-xs backdrop-blur-sm shadow-xl">
+          <button
+            onClick={() => {
+              if (config.mode === 'original') {
+                setMode('mosaic');
+              } else {
+                setMode('original');
+              }
+            }}
+            title={config.mode === 'original' ? 'Switch to Generative Effect' : 'View Pristine Original Photograph'}
+            className={cn(
+              "px-2 py-1 font-mono text-2xs uppercase tracking-wider border rounded-xs transition-colors flex items-center gap-1.5",
+              config.mode === 'original'
+                ? "border-acid-lime bg-acid-lime/20 text-acid-lime font-bold shadow-[0_0_8px_rgba(204,255,0,0.3)]"
+                : "border-obsidian-border bg-obsidian-subtle hover:text-white text-obsidian-muted"
+            )}
+          >
+            <Eye className="w-3 h-3" />
+            <span>{config.mode === 'original' ? 'ORIGINAL ACTIVE' : 'ORIGINAL'}</span>
+          </button>
+
+          <div className="h-4 w-px bg-obsidian-border mx-0.5" />
+
           <IconButton
             size="xs"
             title="Toggle Split Comparison (S)"

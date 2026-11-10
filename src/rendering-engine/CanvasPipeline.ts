@@ -29,6 +29,7 @@ import {
   MatrixRainRenderer,
   HexdumpRenderer,
   DiscoRenderer,
+  OriginalRenderer,
   // Retro / Dither
   DitherRenderer,
 } from '../rendering-modes';
@@ -102,6 +103,7 @@ export class CanvasPipeline {
     this.registerRenderer(new MatrixRainRenderer());
     this.registerRenderer(new HexdumpRenderer());
     this.registerRenderer(new DiscoRenderer());
+    this.registerRenderer(new OriginalRenderer());
 
     // Dither & Retro
     this.registerRenderer(new DitherRenderer());
@@ -110,6 +112,9 @@ export class CanvasPipeline {
     this.renderers.set('pixel-mosaic', mosaic);
     this.renderers.set('halftone', dots);
     this.renderers.set('matrix', this.renderers.get('matrix-rain')!);
+    this.renderers.set('none', this.renderers.get('original')!);
+    this.renderers.set('raw', this.renderers.get('original')!);
+    this.renderers.set('passthrough', this.renderers.get('original')!);
   }
 
   registerRenderer(renderer: IRenderer): void {

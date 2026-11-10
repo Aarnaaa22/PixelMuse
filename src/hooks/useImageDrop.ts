@@ -9,36 +9,37 @@ export const MAX_TEXTURE_DIMENSION = 4096; // 4K max sensible processing dimensi
 export function useImageDrop() {
   const [isDragging, setIsDragging] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const setSourceImage = useStudioStore((s) => s.setSourceImage);
+  const { setSourceImage, setUploadError, setIsImageLoading } = useStudioStore();
 
   const processFile = useCallback(
     async (file: File) => {
       setErrorMessage(null);
-
-      // 1. Validate file format
-      const isValidType =
-        SUPPORTED_MIME_TYPES.includes(file.type) ||
-        /\.(jpe?g|png|webp)$/i.test(file.name);
-
-      if (!isValidType) {
-        const err = 'Invalid file format. Please upload a valid JPEG, PNG, or WebP image.';
-        setErrorMessage(err);
-        alert(err);
-        return;
-      }
-
-      // 2. Validate file size
-      if (file.size > MAX_FILE_SIZE_BYTES) {
-        const err = 'File size exceeds 40MB limit. Please upload an image under 40MB.';
-        setErrorMessage(err);
-        alert(err);
-        return;
-      }
+      setUploadError(null);
+      setIsImageLoading(true);
 
       try {
+        // 1. Validate file format (PNG, JPEG, WebP)
+        const isValidType =
+          SUPPORTED_MIME_TYPES.includes(file.type) ||
+          /\.(jpe?g|png|webp)$/i.test(file.name);
+
+        if (!isValidType) {
+          throw new Error(
+            `Unsupported image format (${file.type || 'unknown'}). Please upload a valid PNG, JPEG, or WebP photograph.`
+          );
+        }
+
+        // 2. Validate file size (max 40MB)
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+          throw new Error(
+            `File size (${(file.size / (1024 * 1024)).toFixed(1)}MB) exceeds the 40MB limit. Please upload an image under 40MB.`
+          );
+        }
+
+        // 3. Asynchronously load and decode image bitmap
         const img = await loadImageFromFile(file);
 
-        // 3. Preserve aspect ratio with sensible dimension constraints
+        // 4. Preserve aspect ratio with sensible maximum texture dimension constraints
         let width = img.naturalWidth;
         let height = img.naturalHeight;
 
@@ -55,6 +56,7 @@ export function useImageDrop() {
           height = Math.round(height * scale);
         }
 
+        // 5. Separate image source asset and metadata in state
         setSourceImage(img, {
           name: file.name,
           width,
@@ -62,14 +64,16 @@ export function useImageDrop() {
           sizeBytes: file.size,
           aspectRatio: width / height,
         });
-      } catch (err) {
-        console.error('Failed to parse uploaded image', err);
-        const msg = 'Failed to load image. The file may be corrupted or unsupported.';
-        setErrorMessage(msg);
-        alert(msg);
+      } catch (err: any) {
+        const errorMsg = err?.message || 'Failed to decode image. The file may be corrupted or in an unsupported format.';
+        console.error('[PixelMuse Image Upload Error]:', err);
+        setErrorMessage(errorMsg);
+        setUploadError(errorMsg);
+      } finally {
+        setIsImageLoading(false);
       }
     },
-    [setSourceImage]
+    [setSourceImage, setUploadError, setIsImageLoading]
   );
 
   const onDragOver = useCallback((e: React.DragEvent) => {

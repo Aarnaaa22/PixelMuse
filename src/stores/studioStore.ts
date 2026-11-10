@@ -234,6 +234,8 @@ interface StudioState {
   layers: StudioLayer[];
   sourceImage: HTMLImageElement | HTMLCanvasElement | null;
   imageMetadata: ImageMetadata | null;
+  uploadError: string | null;
+  isImageLoading: boolean;
   stats: RenderStats;
   
   // Viewport & Canvas
@@ -306,6 +308,8 @@ interface StudioState {
   // Actions - Image & Viewport
   setSourceImage: (img: HTMLImageElement | HTMLCanvasElement | null, metadata: ImageMetadata | null) => void;
   clearImage: () => void;
+  setUploadError: (error: string | null) => void;
+  setIsImageLoading: (loading: boolean) => void;
   setStats: (stats: RenderStats) => void;
   setZoom: (zoom: number) => void;
   setPan: (x: number, y: number) => void;
@@ -321,6 +325,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   layers: DEFAULT_LAYERS,
   sourceImage: null,
   imageMetadata: null,
+  uploadError: null,
+  isImageLoading: false,
   stats: {
     fps: 60,
     renderTimeMs: 0,
@@ -699,10 +705,30 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     })),
 
   setSourceImage: (img, metadata) =>
-    set({ sourceImage: img, imageMetadata: metadata, zoom: 1, panX: 0, panY: 0 }),
+    set({
+      sourceImage: img,
+      imageMetadata: metadata,
+      uploadError: null,
+      isImageLoading: false,
+      zoom: 1,
+      panX: 0,
+      panY: 0,
+    }),
 
   clearImage: () =>
-    set({ sourceImage: null, imageMetadata: null, zoom: 1, panX: 0, panY: 0 }),
+    set({
+      sourceImage: null,
+      imageMetadata: null,
+      uploadError: null,
+      isImageLoading: false,
+      zoom: 1,
+      panX: 0,
+      panY: 0,
+    }),
+
+  setUploadError: (uploadError) => set({ uploadError }),
+
+  setIsImageLoading: (isImageLoading) => set({ isImageLoading }),
 
   setStats: (stats) => set({ stats }),
 
@@ -712,7 +738,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
   resetViewport: () => set({ zoom: 1, panX: 0, panY: 0 }),
 
-  fitToScreen: () => set({ zoom: 0.9, panX: 0, panY: 0 }),
+  fitToScreen: () => set({ zoom: 1, panX: 0, panY: 0 }),
 
   toggleSplitView: () => set((state) => ({ isSplitView: !state.isSplitView })),
 

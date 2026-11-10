@@ -1,23 +1,79 @@
 export async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  if (!file) {
+    throw new Error('No file provided for upload.');
+  }
+
+  // 1. Format validation for PNG, JPEG, WebP
+  const validExtensions = /\.(jpe?g|png|webp)$/i;
+  const validMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  const isValidMime = validMimes.includes(file.type);
+  const isValidExt = validExtensions.test(file.name);
+
+  if (!isValidMime && !isValidExt) {
+    throw new Error(
+      `Unsupported image format (${file.type || 'unknown'}). PixelMuse supports PNG, JPEG, and WebP.`
+    );
+  }
+
+  // 2. Browser image decoding probe with createImageBitmap where supported
+  if (typeof window !== 'undefined' && typeof window.createImageBitmap === 'function') {
+    try {
+      const bitmap = await window.createImageBitmap(file);
+      if (bitmap.width <= 0 || bitmap.height <= 0) {
+        bitmap.close();
+        throw new Error('Image dimensions are zero or corrupted.');
+      }
+      bitmap.close(); // Immediate cleanup to avoid holding GPU memory
+    } catch (bitmapErr: any) {
+      throw new Error(
+        `Image decoding failure: ${bitmapErr?.message || 'Corrupted or unreadable image data.'}`
+      );
+    }
+  }
+
+  // 3. Asynchronous HTMLImageElement loading with URL.createObjectURL and img.decode()
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = async () => {
-        try {
-          if ('decode' in img) {
-            await img.decode();
-          }
-        } catch {
-          // Fall back gracefully if decode() fails or is unsupported
+    let objectUrl = '';
+    try {
+      objectUrl = URL.createObjectURL(file);
+    } catch (urlErr: any) {
+      reject(new Error(`Failed to create object URL: ${urlErr?.message || 'Memory allocation error'}`));
+      return;
+    }
+
+    const img = new Image();
+
+    img.onload = async () => {
+      try {
+        if ('decode' in img) {
+          await img.decode();
         }
+
+        if (img.naturalWidth <= 0 || img.naturalHeight <= 0) {
+          throw new Error('Decoded image dimensions are zero.');
+        }
+
         resolve(img);
-      };
-      img.onerror = () => reject(new Error('Failed to load image file'));
-      img.src = reader.result as string;
+      } catch (decodeErr: any) {
+        URL.revokeObjectURL(objectUrl);
+        reject(
+          new Error(
+            `Image bitmap decoding failed: ${decodeErr?.message || 'Corrupted or invalid image data.'}`
+          )
+        );
+      }
     };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(
+        new Error(
+          'Failed to load image file. The file may be corrupted, truncated, or in an unsupported format.'
+        )
+      );
+    };
+
+    img.src = objectUrl;
   });
 }
 

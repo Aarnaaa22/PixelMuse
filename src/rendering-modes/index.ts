@@ -33,6 +33,7 @@ export * from './LegoRenderer';
 export * from './MatrixRainRenderer';
 export * from './HexdumpRenderer';
 export * from './DiscoRenderer';
+export * from './OriginalRenderer';
 
 // Dithering & Retro
 export * from './DitherRenderer';

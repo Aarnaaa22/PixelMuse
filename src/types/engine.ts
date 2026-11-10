@@ -28,6 +28,8 @@ export type RenderMode =
   | 'matrix-rain'
   | 'hexdump'
   | 'disco'
+  | 'original'
+  | 'none'
   // Classic / Aliases
   | 'dither'
   | 'pixel-mosaic'
