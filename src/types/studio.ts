@@ -18,6 +18,17 @@ export interface ImageMetadata {
   aspectRatio: number;
 }
 
+export interface StudioImageAsset {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  aspectRatio: number;
+  sizeBytes: number;
+  thumbnailUrl: string;
+  image: HTMLImageElement | HTMLCanvasElement;
+}
+
 export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'svg' | 'txt' | 'json';
 
 export interface ExportOptions {

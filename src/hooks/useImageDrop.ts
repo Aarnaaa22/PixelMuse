@@ -89,22 +89,26 @@ export function useImageDrop() {
   }, []);
 
   const onDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
 
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        processFile(e.dataTransfer.files[0]);
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          await processFile(e.dataTransfer.files[i]);
+        }
       }
     },
     [processFile]
   );
 
   const onFileInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
-        processFile(e.target.files[0]);
+        for (let i = 0; i < e.target.files.length; i++) {
+          await processFile(e.target.files[i]);
+        }
       }
       // Reset input value so selecting the same file consecutively triggers onChange
       e.target.value = '';

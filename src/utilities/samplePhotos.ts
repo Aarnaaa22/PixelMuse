@@ -169,3 +169,23 @@ export function createSamplePhotoCanvas(sampleId: string): HTMLCanvasElement {
   }
   return canvas;
 }
+
+export async function createSamplePhotoImage(sampleId: string): Promise<HTMLImageElement> {
+  const canvas = createSamplePhotoCanvas(sampleId);
+  const dataUrl = canvas.toDataURL('image/png');
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = async () => {
+      try {
+        if ('decode' in img) {
+          await img.decode();
+        }
+      } catch {
+        // Fall back gracefully
+      }
+      resolve(img);
+    };
+    img.onerror = () => reject(new Error('Failed to decode sample photograph asset.'));
+    img.src = dataUrl;
+  });
+}

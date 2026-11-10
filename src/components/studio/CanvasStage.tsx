@@ -14,7 +14,7 @@ import { IconButton, Button, Badge } from '../ui';
 import { useCanvasRender, useImageDrop } from '../../hooks';
 import { useStudioStore } from '../../stores';
 import { cn } from '../../utilities';
-import { SAMPLE_PHOTOS, createSamplePhotoCanvas } from '../../utilities/samplePhotos';
+import { SAMPLE_PHOTOS, createSamplePhotoImage } from '../../utilities/samplePhotos';
 
 export const CanvasStage: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +37,7 @@ export const CanvasStage: React.FC = () => {
     uploadError,
     setUploadError,
     isImageLoading,
+    setIsImageLoading,
     zoom,
     setZoom,
     panX,
@@ -144,16 +145,23 @@ export const CanvasStage: React.FC = () => {
     setZoom(zoom * zoomFactor);
   };
 
-  const handleSelectSample = (sampleId: string) => {
-    const canvas = createSamplePhotoCanvas(sampleId);
-    const sample = SAMPLE_PHOTOS.find((s) => s.id === sampleId)!;
-    setSourceImage(canvas, {
-      name: `${sample.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      width: sample.width,
-      height: sample.height,
-      sizeBytes: 0,
-      aspectRatio: sample.width / sample.height,
-    });
+  const handleSelectSample = async (sampleId: string) => {
+    try {
+      setIsImageLoading(true);
+      const sample = SAMPLE_PHOTOS.find((s) => s.id === sampleId) || SAMPLE_PHOTOS[0];
+      const img = await createSamplePhotoImage(sampleId);
+      setSourceImage(img, {
+        name: `${sample.name.toLowerCase().replace(/\s+/g, '-')}.png`,
+        width: sample.width,
+        height: sample.height,
+        sizeBytes: 256 * 1024,
+        aspectRatio: sample.width / sample.height,
+      });
+    } catch (err: any) {
+      setUploadError(`Failed to load sample photograph: ${err?.message || 'Decoding error'}`);
+    } finally {
+      setIsImageLoading(false);
+    }
   };
 
   return (
@@ -171,6 +179,7 @@ export const CanvasStage: React.FC = () => {
       <input
         ref={fileInputRef}
         type="file"
+        multiple
         accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
         onChange={onFileInputChange}
         className="hidden"
@@ -224,7 +233,7 @@ export const CanvasStage: React.FC = () => {
               Awaiting Photographic Sensor
             </Badge>
             <h2 className="font-display text-2xl font-bold uppercase text-white tracking-wide">
-              Import Image To Begin
+              Your Canvas Is Waiting.
             </h2>
             <p className="font-mono text-xs text-obsidian-text leading-relaxed">
               Drag and drop any photograph onto the canvas, browse your computer, or test
@@ -239,7 +248,7 @@ export const CanvasStage: React.FC = () => {
               icon={<UploadCloud className="w-4 h-4 text-black" />}
               onClick={() => fileInputRef.current?.click()}
             >
-              Browse Photograph
+              Browse Files
             </Button>
           </div>
 
@@ -268,6 +277,24 @@ export const CanvasStage: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Subtle Image Information Indicator (Active State) */}
+      {sourceImage && imageMetadata && (
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-2.5 bg-obsidian-surface/90 border border-obsidian-border px-3 py-1.5 rounded-xs backdrop-blur-md shadow-lg select-none">
+          <div className="w-2 h-2 rounded-full bg-acid-lime animate-pulse" />
+          <span className="font-mono text-2xs font-semibold text-white truncate max-w-[180px]" title={imageMetadata.name}>
+            {imageMetadata.name}
+          </span>
+          <span className="text-obsidian-border font-mono text-2xs">/</span>
+          <span className="font-mono text-2xs text-obsidian-muted">
+            {imageMetadata.width}×{imageMetadata.height}px
+          </span>
+          <span className="text-obsidian-border font-mono text-2xs">/</span>
+          <span className="font-mono text-2xs text-acid-lime font-bold">
+            {Math.round(zoom * 100)}%
+          </span>
         </div>
       )}
 

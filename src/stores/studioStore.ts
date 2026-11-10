@@ -15,7 +15,7 @@ import {
   LightPoint,
   MaskConfig,
 } from '../types';
-import { SidebarTab } from '../types/studio';
+import { SidebarTab, StudioImageAsset } from '../types/studio';
 
 export const BUILTIN_PALETTES: PalettePreset[] = [
   {
@@ -232,6 +232,8 @@ interface StudioState {
   projectName: string;
   config: RenderConfig;
   layers: StudioLayer[];
+  images: StudioImageAsset[];
+  activeImageId: string | null;
   sourceImage: HTMLImageElement | HTMLCanvasElement | null;
   imageMetadata: ImageMetadata | null;
   uploadError: string | null;
@@ -307,7 +309,10 @@ interface StudioState {
 
   // Actions - Image & Viewport
   setSourceImage: (img: HTMLImageElement | HTMLCanvasElement | null, metadata: ImageMetadata | null) => void;
+  selectImage: (id: string) => void;
+  removeImage: (id: string) => void;
   clearImage: () => void;
+  clearAllImages: () => void;
   setUploadError: (error: string | null) => void;
   setIsImageLoading: (loading: boolean) => void;
   setStats: (stats: RenderStats) => void;
@@ -323,6 +328,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   projectName: 'UNTITLED_STUDIO_01',
   config: DEFAULT_CONFIG,
   layers: DEFAULT_LAYERS,
+  images: [],
+  activeImageId: null,
   sourceImage: null,
   imageMetadata: null,
   uploadError: null,
@@ -704,19 +711,139 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       ),
     })),
 
-  setSourceImage: (img, metadata) =>
+  setSourceImage: (img, metadata) => {
+    if (!img || !metadata) {
+      set({
+        sourceImage: null,
+        imageMetadata: null,
+        activeImageId: null,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+      });
+      return;
+    }
+
+    const id = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    let thumbUrl = '';
+    if ('src' in img && typeof img.src === 'string' && img.src.length > 0) {
+      thumbUrl = img.src;
+    } else if (img instanceof HTMLCanvasElement) {
+      try {
+        thumbUrl = img.toDataURL('image/png');
+      } catch {
+        thumbUrl = '';
+      }
+    }
+
+    const asset: StudioImageAsset = {
+      id,
+      name: metadata.name,
+      width: metadata.width,
+      height: metadata.height,
+      aspectRatio: metadata.aspectRatio,
+      sizeBytes: metadata.sizeBytes,
+      thumbnailUrl: thumbUrl,
+      image: img,
+    };
+
+    set((state) => {
+      const existingFiltered = state.images.filter((i) => i.name !== metadata.name);
+      return {
+        images: [asset, ...existingFiltered],
+        activeImageId: id,
+        sourceImage: img,
+        imageMetadata: metadata,
+        uploadError: null,
+        isImageLoading: false,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+      };
+    });
+  },
+
+  selectImage: (id: string) => {
+    const { images } = get();
+    const asset = images.find((i) => i.id === id);
+    if (!asset) return;
+
     set({
-      sourceImage: img,
-      imageMetadata: metadata,
-      uploadError: null,
-      isImageLoading: false,
+      activeImageId: id,
+      sourceImage: asset.image,
+      imageMetadata: {
+        name: asset.name,
+        width: asset.width,
+        height: asset.height,
+        sizeBytes: asset.sizeBytes,
+        aspectRatio: asset.aspectRatio,
+      },
       zoom: 1,
       panX: 0,
       panY: 0,
-    }),
+      uploadError: null,
+    });
+  },
 
-  clearImage: () =>
+  removeImage: (id: string) => {
+    set((state) => {
+      const remaining = state.images.filter((i) => i.id !== id);
+      if (state.activeImageId === id) {
+        if (remaining.length > 0) {
+          const next = remaining[0];
+          return {
+            images: remaining,
+            activeImageId: next.id,
+            sourceImage: next.image,
+            imageMetadata: {
+              name: next.name,
+              width: next.width,
+              height: next.height,
+              sizeBytes: next.sizeBytes,
+              aspectRatio: next.aspectRatio,
+            },
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+          };
+        } else {
+          return {
+            images: [],
+            activeImageId: null,
+            sourceImage: null,
+            imageMetadata: null,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+          };
+        }
+      }
+      return { images: remaining };
+    });
+  },
+
+  clearImage: () => {
+    const { activeImageId } = get();
+    if (activeImageId) {
+      get().removeImage(activeImageId);
+    } else {
+      set({
+        sourceImage: null,
+        imageMetadata: null,
+        activeImageId: null,
+        uploadError: null,
+        isImageLoading: false,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+      });
+    }
+  },
+
+  clearAllImages: () =>
     set({
+      images: [],
+      activeImageId: null,
       sourceImage: null,
       imageMetadata: null,
       uploadError: null,

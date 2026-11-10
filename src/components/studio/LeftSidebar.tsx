@@ -11,12 +11,14 @@ import {
   ArrowRight,
   Star,
   Check,
+  Image as ImageIcon,
+  Plus,
 } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import { useStudioStore, useAuthStore } from '../../stores';
 import { CURATED_PRESETS } from '../../presets/curatedPresets';
 import { useImageDrop } from '../../hooks';
-import { SAMPLE_PHOTOS, createSamplePhotoCanvas } from '../../utilities/samplePhotos';
+import { SAMPLE_PHOTOS, createSamplePhotoImage } from '../../utilities/samplePhotos';
 import { SidebarTab } from '../../types/studio';
 import { RenderMode } from '../../types';
 import { cn } from '../../utilities';
@@ -32,11 +34,17 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
   const {
     activeSidebarTab,
     setActiveSidebarTab,
+    images,
+    activeImageId,
+    selectImage,
+    removeImage,
     sourceImage,
     imageMetadata,
     setSourceImage,
     clearImage,
     resetViewport,
+    setIsImageLoading,
+    setUploadError,
     config,
     setMode,
     updateConfig,
@@ -57,16 +65,24 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     { id: 'layers', label: 'Layers', icon: <Layers className="w-4 h-4" /> },
   ];
 
-  const handleSelectSample = (sampleId: string) => {
-    const canvas = createSamplePhotoCanvas(sampleId);
-    const sample = SAMPLE_PHOTOS.find((s) => s.id === sampleId)!;
-    setSourceImage(canvas, {
-      name: `${sample.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      width: sample.width,
-      height: sample.height,
-      sizeBytes: 0,
-      aspectRatio: sample.width / sample.height,
-    });
+  const handleSelectSample = async (sampleId: string) => {
+    try {
+      setIsImageLoading(true);
+      const sample = SAMPLE_PHOTOS.find((s) => s.id === sampleId) || SAMPLE_PHOTOS[0];
+      const img = await createSamplePhotoImage(sampleId);
+      setSourceImage(img, {
+        name: `${sample.name.toLowerCase().replace(/\s+/g, '-')}.png`,
+        width: sample.width,
+        height: sample.height,
+        sizeBytes: 256 * 1024,
+        aspectRatio: sample.width / sample.height,
+      });
+    } catch (err: any) {
+      console.error('[PixelMuse Sample Load Error]:', err);
+      setUploadError(`Failed to load sample photograph: ${err?.message || 'Decoding error'}`);
+    } finally {
+      setIsImageLoading(false);
+    }
   };
 
   const [modesCategoryFilter, setModesCategoryFilter] = React.useState<string>('all');
@@ -334,37 +350,164 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
               </div>
             </div>
 
-            {/* Current Loaded Image Info */}
-            {sourceImage && imageMetadata && (
+            {/* Uploaded Photographs Library */}
+            {images.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                      PHOTOGRAPHS
+                    </span>
+                    <Badge variant="lime" size="xs">
+                      {images.length}
+                    </Badge>
+                  </div>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="font-mono text-[10px] uppercase text-acid-lime hover:underline flex items-center gap-1"
+                    title="Upload an additional photograph"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Photo
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {images.map((img) => {
+                    const isActive = img.id === activeImageId;
+                    return (
+                      <div
+                        key={img.id}
+                        onClick={() => {
+                          if (!isActive) {
+                            selectImage(img.id);
+                          } else {
+                            resetViewport();
+                          }
+                        }}
+                        className={cn(
+                          "p-2.5 flex items-center gap-3 cursor-pointer transition-all duration-150 rounded-xs group relative",
+                          isActive
+                            ? "border-2 border-acid-lime bg-acid-lime/10 shadow-[0_0_15px_rgba(204,255,0,0.12)] ring-1 ring-acid-lime/50"
+                            : "border border-obsidian-border hover:border-obsidian-text/80 bg-obsidian-subtle/60 hover:bg-obsidian-subtle"
+                        )}
+                        title={isActive ? "Active image (Click to center)" : "Click to set as active image"}
+                      >
+                        {/* Thumbnail Preview */}
+                        <div className="w-14 h-14 rounded-xs overflow-hidden border border-obsidian-border bg-obsidian flex-shrink-0 relative">
+                          {img.thumbnailUrl ? (
+                            <img
+                              src={img.thumbnailUrl}
+                              alt={img.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-obsidian-muted">
+                              <ImageIcon className="w-6 h-6" />
+                            </div>
+                          )}
+                          {isActive && (
+                            <div className="absolute top-1 left-1 bg-acid-lime text-black rounded-full p-0.5 shadow">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Metadata Details */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={cn(
+                                "font-mono text-xs font-semibold truncate block",
+                                isActive ? "text-white group-hover:text-acid-lime" : "text-obsidian-text group-hover:text-white"
+                              )}
+                              title={img.name}
+                            >
+                              {img.name}
+                            </span>
+                            {isActive && (
+                              <Badge variant="lime" dot size="xs" className="flex-shrink-0">
+                                ACTIVE
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 font-mono text-[10px] text-obsidian-muted">
+                            <span>
+                              {img.width} × {img.height} PX
+                            </span>
+                            <span>•</span>
+                            <span>RATIO: {img.aspectRatio.toFixed(2)}</span>
+                          </div>
+
+                          {!isActive && (
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-obsidian-muted/80 group-hover:text-acid-lime transition-colors block">
+                              Click to activate →
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Actions: Remove */}
+                        <div className="flex flex-col items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeImage(img.id);
+                            }}
+                            className="p-1 text-obsidian-muted hover:text-signal-coral rounded-xs hover:bg-obsidian-950 transition-colors"
+                            title="Remove photograph"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Single Active Fallback (if image loaded without library registration) */}
+            {sourceImage && imageMetadata && images.length === 0 && (
               <div
                 onClick={() => resetViewport()}
-                className="border border-obsidian-border hover:border-acid-lime/70 bg-obsidian-subtle p-3 space-y-2 cursor-pointer transition-all duration-150 group rounded-xs"
-                title="Click to center active photograph in main workspace"
+                className="border-2 border-acid-lime bg-acid-lime/10 p-3 space-y-2 cursor-pointer transition-all duration-150 rounded-xs group ring-1 ring-acid-lime/50"
+                title="Active photograph (Click to center)"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted group-hover:text-acid-lime transition-colors">
+                  <Badge variant="lime" dot size="xs">
                     ACTIVE PHOTOGRAPH
-                  </span>
+                  </Badge>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       clearImage();
                     }}
                     className="text-obsidian-muted hover:text-signal-coral p-1 -mr-1"
-                    title="Unload Image"
+                    title="Remove photograph"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="font-mono text-xs text-white truncate font-medium group-hover:text-acid-lime transition-colors">
-                  {imageMetadata.name}
-                </div>
-                <div className="flex items-center gap-2 font-mono text-2xs text-obsidian-muted">
-                  <span>
-                    {imageMetadata.width} × {imageMetadata.height} PX
-                  </span>
-                  <span>•</span>
-                  <span>RATIO: {imageMetadata.aspectRatio.toFixed(2)}</span>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="w-14 h-14 rounded-xs overflow-hidden border border-obsidian-border bg-obsidian flex-shrink-0">
+                    <img
+                      src={'src' in sourceImage ? sourceImage.src : (sourceImage as HTMLCanvasElement).toDataURL()}
+                      alt={imageMetadata.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="space-y-1 min-w-0">
+                    <div className="font-mono text-xs text-white truncate font-medium">
+                      {imageMetadata.name}
+                    </div>
+                    <div className="flex items-center gap-2 font-mono text-2xs text-obsidian-muted">
+                      <span>{imageMetadata.width} × {imageMetadata.height} PX</span>
+                      <span>•</span>
+                      <span>RATIO: {imageMetadata.aspectRatio.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -376,7 +519,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
                   Sample Photography
                 </span>
                 <Badge variant="outline" size="xs">
-                  4 ITEMS
+                  {SAMPLE_PHOTOS.length} ITEMS
                 </Badge>
               </div>
 
@@ -385,17 +528,23 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
                   <button
                     key={sample.id}
                     onClick={() => handleSelectSample(sample.id)}
-                    className="w-full border border-obsidian-border hover:border-acid-lime p-2.5 text-left bg-obsidian-950 flex items-center justify-between group transition-colors rounded-xs"
+                    className="w-full border border-obsidian-border hover:border-acid-lime p-2.5 text-left bg-obsidian-950 hover:bg-obsidian-subtle flex items-center justify-between group transition-all duration-150 rounded-xs"
+                    title={`Click to load ${sample.name} onto canvas`}
                   >
-                    <div className="space-y-0.5">
-                      <span className="font-mono text-xs uppercase text-white font-medium block group-hover:text-acid-lime transition-colors">
-                        {sample.name}
-                      </span>
-                      <span className="font-mono text-2xs text-obsidian-muted block">
-                        {sample.category}
-                      </span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xs bg-obsidian border border-obsidian-border flex items-center justify-center text-acid-lime group-hover:border-acid-lime transition-colors flex-shrink-0">
+                        <ImageIcon className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0">
+                        <span className="font-mono text-xs uppercase text-white font-medium block truncate group-hover:text-acid-lime transition-colors">
+                          {sample.name}
+                        </span>
+                        <span className="font-mono text-[10px] text-obsidian-muted block truncate">
+                          {sample.category} • {sample.width}×{sample.height}px
+                        </span>
+                      </div>
                     </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-obsidian-muted group-hover:text-acid-lime transition-colors" />
+                    <ArrowRight className="w-3.5 h-3.5 text-obsidian-muted group-hover:text-acid-lime group-hover:translate-x-0.5 transition-all flex-shrink-0" />
                   </button>
                 ))}
               </div>
