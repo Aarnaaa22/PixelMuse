@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Sliders, Compass, PlayCircle, Library, Home } from 'lucide-react';
+import { Sliders, Compass, PlayCircle, Library, Home, Sparkles } from 'lucide-react';
 import { cn } from '../../utilities';
 
 interface NavItem {
@@ -13,6 +13,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Index', icon: <Home className="w-4 h-4" /> },
   { to: '/studio', label: 'Studio', badge: 'v1.0', icon: <Sliders className="w-4 h-4" /> },
+  { to: '/library', label: 'Art Library', badge: '48', icon: <Sparkles className="w-4 h-4" /> },
   { to: '/explore', label: 'Explore', icon: <Compass className="w-4 h-4" /> },
   { to: '/motion', label: 'Motion', badge: 'Live', icon: <PlayCircle className="w-4 h-4" /> },
   { to: '/creations', label: 'Creations', icon: <Library className="w-4 h-4" /> },
@@ -67,4 +68,3 @@ export const NavigationRail: React.FC<NavigationRailProps> = ({ className }) => 
     </nav>
   );
 };
-

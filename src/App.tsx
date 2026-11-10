@@ -5,6 +5,7 @@ import { useAuthStore, useProjectStore } from './stores';
 import {
   HomePage,
   StudioPage,
+  ArtLibraryPage,
   ExplorePage,
   MotionPage,
   CreationsPage,
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
         <Route path="/" element={<RootLayout />}>
           <Route index element={<HomePage />} />
           <Route path="studio" element={<StudioPage />} />
+          <Route path="library" element={<ArtLibraryPage />} />
           <Route path="explore" element={<ExplorePage />} />
           <Route path="motion" element={<MotionPage />} />
           <Route path="creations" element={<CreationsPage />} />
@@ -37,4 +39,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-
