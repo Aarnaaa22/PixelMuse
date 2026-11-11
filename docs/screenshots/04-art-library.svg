@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900" style="background:#08080A; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <rect width="1440" height="900" fill="#08080A"/>
+  
+  <!-- Top Nav -->
+  <rect x="0" y="0" width="1440" height="64" fill="#0A0A0E" stroke="#1F1F28" stroke-width="1"/>
+  <circle cx="48" cy="32" r="12" fill="#CCFF00"/>
+  <text x="44" y="37" font-weight="900" font-size="14" fill="#08080A">P</text>
+  <text x="70" y="37" font-weight="900" font-size="16" letter-spacing="2" fill="#FFFFFF">PIXELMUSE</text>
+  <text x="960" y="37" font-family="monospace" font-size="12" fill="#8E8E9F">STUDIO</text>
+  <text x="1050" y="37" font-family="monospace" font-size="12" fill="#CCFF00" font-weight="700">ART LIBRARY</text>
+  <text x="1170" y="37" font-family="monospace" font-size="12" fill="#8E8E9F">EXPLORE</text>
+
+  <!-- Editorial Header -->
+  <g transform="translate(80, 80)">
+    <rect x="0" y="0" width="165" height="22" rx="2" fill="#14141E" stroke="#9D4EDD" stroke-width="0.8"/>
+    <circle cx="10" cy="11" r="3" fill="#9D4EDD"/>
+    <text x="20" y="15" font-family="monospace" font-size="10" fill="#9D4EDD" font-weight="700">COMMUNITY CATALOG</text>
+    <text x="180" y="15" font-family="monospace" font-size="10" fill="#6A6A78">48 REGISTERED GENERATIVE RECIPES</text>
+
+    <text x="0" y="65" font-weight="900" font-size="44" letter-spacing="-1.5" fill="#FFFFFF">
+      THE ART LIBRARY
+    </text>
+    <text x="0" y="95" font-family="monospace" font-size="12" fill="#8E8E9F">
+      Curated mathematical recipes from the community. One-click load directly into Studio.
+    </text>
+
+    <!-- Search Bar -->
+    <g transform="translate(860, 45)">
+      <rect x="0" y="0" width="420" height="42" rx="2" fill="#0E0E14" stroke="#1F1F28"/>
+      <text x="16" y="25" font-family="monospace" font-size="12" fill="#5A5A68">🔍 Search 48 recipes by creator, tag, or formula...</text>
+    </g>
+
+    <!-- Category Pills -->
+    <g transform="translate(0, 125)">
+      <rect x="0" y="0" width="60" height="28" rx="2" fill="#CCFF00"/>
+      <text x="16" y="18" font-family="monospace" font-size="11" font-weight="800" fill="#08080A">ALL (48)</text>
+
+      <rect x="70" y="0" width="70" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="82" y="18" font-family="monospace" font-size="11" fill="#FFFFFF">ASCII (18)</text>
+
+      <rect x="150" y="0" width="80" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="160" y="18" font-family="monospace" font-size="11" fill="#8E8E9F">MATRIX (6)</text>
+
+      <rect x="240" y="0" width="105" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="250" y="18" font-family="monospace" font-size="11" fill="#8E8E9F">GEOMETRIC (8)</text>
+
+      <rect x="355" y="0" width="100" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="365" y="18" font-family="monospace" font-size="11" fill="#8E8E9F">DITHERING (5)</text>
+
+      <rect x="465" y="0" width="95" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="475" y="18" font-family="monospace" font-size="11" fill="#8E8E9F">MOSAIC (4)</text>
+
+      <rect x="570" y="0" width="125" height="28" rx="2" fill="#14141E" stroke="#1F1F28"/>
+      <text x="580" y="18" font-family="monospace" font-size="11" fill="#8E8E9F">ANIMATED BG (7)</text>
+    </g>
+  </g>
+
+  <!-- Recipe Cards Grid (3 Columns) -->
+  <g transform="translate(80, 260)">
+    <!-- Recipe 1 -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="405" height="270" rx="3" fill="#0E0E14" stroke="#1F1F28"/>
+      <!-- Canvas Preview Area -->
+      <rect x="0" y="0" width="405" height="150" fill="#050508"/>
+      <circle cx="200" cy="75" r="50" fill="url(#violetGlow)"/>
+      <circle cx="200" cy="75" r="35" fill="none" stroke="#CCFF00" stroke-width="2"/>
+      <text x="16" y="24" font-family="monospace" font-size="9" fill="#CCFF00">HERO MESH</text>
+      <rect x="325" y="12" width="65" height="16" rx="2" fill="#14141E" stroke="#9D4EDD"/>
+      <text x="332" y="23" font-family="monospace" font-size="8" fill="#9D4EDD">▶ ANIMATED</text>
+
+      <text x="16" y="180" font-family="sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">Hero ASCII One</text>
+      <text x="310" y="180" font-family="monospace" font-size="10" fill="#8E8E9F">by @larsen66</text>
+      <text x="16" y="202" font-family="monospace" font-size="10" fill="#8E8E9F">Rotating 3D character mesh with vanishing point perspective.</text>
+      
+      <rect x="16" y="225" width="373" height="32" rx="2" fill="#CCFF00"/>
+      <text x="150" y="246" font-family="monospace" font-size="11" font-weight="800" fill="#08080A">TRY THIS STYLE ↗</text>
+    </g>
+
+    <!-- Recipe 2 -->
+    <g transform="translate(435, 0)">
+      <rect x="0" y="0" width="405" height="270" rx="3" fill="#0E0E14" stroke="#1F1F28"/>
+      <rect x="0" y="0" width="405" height="150" fill="#050805"/>
+      <text x="170" y="80" font-family="monospace" font-size="12" fill="#33E533">01#*+:=~-</text>
+      <circle cx="202" cy="75" r="45" fill="none" stroke="#33E533" stroke-width="1.5" stroke-dasharray="4,4"/>
+      <text x="16" y="24" font-family="monospace" font-size="9" fill="#33E533">RAYMARCH</text>
+      <rect x="325" y="12" width="65" height="16" rx="2" fill="#14141E" stroke="#33E533"/>
+      <text x="332" y="23" font-family="monospace" font-size="8" fill="#33E533">▶ ANIMATED</text>
+
+      <text x="16" y="180" font-family="sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">Hero ASCII Tunnel</text>
+      <text x="290" y="180" font-family="monospace" font-size="10" fill="#8E8E9F">by @nikolas-sapa</text>
+      <text x="16" y="202" font-family="monospace" font-size="10" fill="#8E8E9F">Concentric glowing ASCII ring loops racing toward viewer.</text>
+
+      <rect x="16" y="225" width="373" height="32" rx="2" fill="#14141E" stroke="#2B2B38"/>
+      <text x="145" y="246" font-family="monospace" font-size="11" font-weight="600" fill="#FFFFFF">TRY THIS STYLE ↗</text>
+    </g>
+
+    <!-- Recipe 3 -->
+    <g transform="translate(870, 0)">
+      <rect x="0" y="0" width="405" height="270" rx="3" fill="#0E0E14" stroke="#1F1F28"/>
+      <rect x="0" y="0" width="405" height="150" fill="#08080C"/>
+      <polygon points="202,35 240,75 202,115 164,75" fill="none" stroke="#CCFF00" stroke-width="2"/>
+      <polygon points="202,50 225,75 202,100 179,75" fill="none" stroke="#9D4EDD" stroke-width="1.5"/>
+      <text x="16" y="24" font-family="monospace" font-size="9" fill="#CCFF00">WIREFRAME</text>
+
+      <text x="16" y="180" font-family="sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">ASCII Cube</text>
+      <text x="310" y="180" font-family="monospace" font-size="10" fill="#8E8E9F">by @yacineMTB</text>
+      <text x="16" y="202" font-family="monospace" font-size="10" fill="#8E8E9F">Rotating isometric 3D wireframe cube with Euler matrices.</text>
+
+      <rect x="16" y="225" width="373" height="32" rx="2" fill="#14141E" stroke="#2B2B38"/>
+      <text x="145" y="246" font-family="monospace" font-size="11" font-weight="600" fill="#FFFFFF">TRY THIS STYLE ↗</text>
+    </g>
+  </g>
+
+  <!-- Bottom Pagination / Status Indicator -->
+  <g transform="translate(80, 560)">
+    <rect x="0" y="0" width="1280" height="40" rx="2" fill="#0A0A0E" stroke="#1F1F28"/>
+    <text x="24" y="24" font-family="monospace" font-size="10" fill="#8E8E9F">SHOWING 3 OF 48 COMMUNITY RECIPES // FILTER: ALL // HARDWARE ACCELERATED RASTER ENGINE</text>
+    <text x="1170" y="24" font-family="monospace" font-size="10" fill="#CCFF00">PAGE 1 OF 16 ↗</text>
+  </g>
+</svg>
