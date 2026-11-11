@@ -9,10 +9,14 @@ import {
   ArrowRight,
   AlertCircle,
   Eye,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { IconButton, Button, Badge } from '../ui';
 import { useCanvasRender, useImageDrop } from '../../hooks';
 import { useStudioStore } from '../../stores';
+import { RenderMode } from '../../types';
 import { cn } from '../../utilities';
 import { SAMPLE_PHOTOS, createSamplePhotoImage } from '../../utilities/samplePhotos';
 
@@ -24,6 +28,7 @@ export const CanvasStage: React.FC = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+  const [showGuideBar, setShowGuideBar] = useState(true);
 
   useCanvasRender(canvasRef);
   const { isDragging, onDragOver, onDragLeave, onDrop, onFileInputChange } = useImageDrop();
@@ -79,28 +84,26 @@ export const CanvasStage: React.FC = () => {
 
   // Calculate contain-style fitting dimensions:
   // Preserves aspect ratio, fits within viewport, never stretched, never cropped, remains centered.
+  // Prominently scales up small photographs to fill ~84% width and ~80% height so the user does not have to squint.
   const fitDimensions = useMemo(() => {
-    if (!sourceImage || viewportSize.width === 0 || viewportSize.height === 0) {
-      const w = imageMetadata?.width || 640;
-      const h = imageMetadata?.height || 640;
-      return { width: w, height: h };
-    }
+    const stageW = viewportSize.width > 0 ? viewportSize.width : (typeof window !== 'undefined' ? window.innerWidth - 640 : 800);
+    const stageH = viewportSize.height > 0 ? viewportSize.height : (typeof window !== 'undefined' ? window.innerHeight - 150 : 600);
 
     const srcW =
-      ('naturalWidth' in sourceImage ? sourceImage.naturalWidth : sourceImage.width) ||
+      (sourceImage && 'naturalWidth' in sourceImage ? sourceImage.naturalWidth : (sourceImage as any)?.width) ||
       imageMetadata?.width ||
       640;
     const srcH =
-      ('naturalHeight' in sourceImage ? sourceImage.naturalHeight : sourceImage.height) ||
+      (sourceImage && 'naturalHeight' in sourceImage ? sourceImage.naturalHeight : (sourceImage as any)?.height) ||
       imageMetadata?.height ||
       640;
 
     if (srcW <= 0 || srcH <= 0) return { width: 640, height: 640 };
 
     const aspect = srcW / srcH;
-    // 64px padding to guarantee breathing room in the stage
-    const maxW = Math.max(160, viewportSize.width - 64);
-    const maxH = Math.max(160, viewportSize.height - 64);
+    // Scale image up to comfortably and prominently fill the viewport
+    const maxW = Math.max(320, stageW * 0.84);
+    const maxH = Math.max(320, stageH * 0.80);
 
     let w = maxW;
     let h = maxW / aspect;
@@ -164,6 +167,17 @@ export const CanvasStage: React.FC = () => {
     }
   };
 
+  const QUICK_STYLES: { id: RenderMode; name: string; hint: string }[] = [
+    { id: 'original', name: 'Original', hint: 'Default unmodified view: see your raw uploaded photo as it is' },
+    { id: 'ascii', name: 'ASCII', hint: 'Monospace typographic glyphs mapped by luminance' },
+    { id: 'pixel', name: 'Pixel', hint: 'Quantized 8-bit arcade pixel grid' },
+    { id: 'dither', name: 'Dither', hint: 'Bayer ordered dithering & vintage halftone matrix' },
+    { id: 'dots', name: 'Dots', hint: 'Luminous circular halftone screening dots' },
+    { id: 'matrix-rain', name: 'Matrix', hint: 'Cascading digital code streams with phosphor trails' },
+    { id: 'crosses', name: 'Crosses', hint: 'Neon geometric crosses with synthwave aura' },
+    { id: 'rings', name: 'Rings', hint: 'Concentric pulsating rings with radial energy' },
+  ];
+
   return (
     <div
       ref={containerRef}
@@ -174,7 +188,7 @@ export const CanvasStage: React.FC = () => {
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
-      className="relative flex-1 h-full w-full bg-obsidian-950 overflow-hidden select-none flex items-center justify-center studio-checker cursor-grab active:cursor-grabbing"
+      className="relative flex-1 min-h-0 w-full h-full bg-obsidian-950 overflow-hidden select-none flex items-center justify-center studio-checker cursor-grab active:cursor-grabbing"
     >
       <input
         ref={fileInputRef}
@@ -280,20 +294,111 @@ export const CanvasStage: React.FC = () => {
         </div>
       )}
 
-      {/* Subtle Image Information Indicator (Active State) */}
+      {/* STUDIO ASSISTANT & QUICK WORKFLOW DIRECTION BAR */}
       {sourceImage && imageMetadata && (
-        <div className="absolute top-4 left-4 z-30 flex items-center gap-2.5 bg-obsidian-surface/90 border border-obsidian-border px-3 py-1.5 rounded-xs backdrop-blur-md shadow-lg select-none">
+        <div className="absolute top-3 left-3 right-3 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+          {/* Left: Active Photo Metadata Pill + Quick Replace */}
+          <div className="pointer-events-auto flex items-center gap-2 bg-obsidian-surface/95 border border-obsidian-border px-3 py-1.5 rounded-xs backdrop-blur-md shadow-xl select-none">
+            <div className="w-2 h-2 rounded-full bg-acid-lime animate-pulse" />
+            <span
+              className="font-mono text-2xs font-semibold text-white truncate max-w-[140px] sm:max-w-[200px]"
+              title={`Uploaded File: ${imageMetadata.name}`}
+            >
+              {imageMetadata.name}
+            </span>
+            <span className="text-obsidian-border font-mono text-2xs">/</span>
+            <span
+              className="font-mono text-2xs text-obsidian-muted"
+              title="Native Sensor Dimensions"
+            >
+              {imageMetadata.width}×{imageMetadata.height}px
+            </span>
+            <span className="text-obsidian-border font-mono text-2xs">/</span>
+            <span
+              className="font-mono text-2xs text-acid-lime font-bold"
+              title="Display Viewport Scale"
+            >
+              {Math.round(zoom * 100)}%
+            </span>
+            <div className="h-3 w-px bg-obsidian-border mx-0.5" />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              title="Upload and replace with a different photograph"
+              className="font-mono text-[9px] uppercase tracking-wider text-obsidian-muted hover:text-white hover:border-acid-lime/50 border border-obsidian-border px-1.5 py-0.5 rounded-xs bg-obsidian-950 transition-colors"
+            >
+              Replace
+            </button>
+          </div>
+
+          {/* Center: Interactive Workflow & Style Quick-Switcher */}
+          {showGuideBar ? (
+            <div className="pointer-events-auto hidden md:flex items-center gap-1.5 bg-obsidian-surface/95 border border-obsidian-border px-2.5 py-1 rounded-xs backdrop-blur-md shadow-xl select-none">
+              <span
+                className="font-mono text-[9px] uppercase tracking-widest text-obsidian-muted pr-1 flex items-center gap-1"
+                title="Workflow Step 2: Choose your desired raster transformation"
+              >
+                <Sparkles className="w-2.5 h-2.5 text-acid-lime" />
+                <span>STYLE:</span>
+              </span>
+
+              {QUICK_STYLES.map((st) => {
+                const isActive = config.mode === st.id;
+                return (
+                  <button
+                    key={st.id}
+                    onClick={() => setMode(st.id)}
+                    title={st.hint}
+                    className={cn(
+                      'px-2 py-0.5 font-mono text-2xs uppercase tracking-wider rounded-xs border transition-all',
+                      isActive
+                        ? 'border-acid-lime bg-acid-lime/20 text-acid-lime font-bold shadow-[0_0_8px_rgba(204,255,0,0.25)]'
+                        : 'border-obsidian-border text-obsidian-muted hover:text-white hover:border-obsidian-border-hover bg-obsidian-950'
+                    )}
+                  >
+                    {st.name}
+                  </button>
+                );
+              })}
+
+              <div className="h-3 w-px bg-obsidian-border mx-1" />
+
+              <button
+                onClick={() => setShowGuideBar(false)}
+                title="Collapse Assistant Bar"
+                className="p-1 text-obsidian-muted hover:text-white"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowGuideBar(true)}
+              title="Show Quick Style Assistant"
+              className="pointer-events-auto px-2 py-1 bg-obsidian-surface/90 border border-obsidian-border text-obsidian-muted hover:text-white font-mono text-2xs uppercase rounded-xs backdrop-blur-md flex items-center gap-1"
+            >
+              <Sparkles className="w-3 h-3 text-acid-lime" />
+              <span>Quick Styles</span>
+              <ChevronDown className="w-3 h-3" />
+            </button>
+          )}
+
+          {/* Right: Quick Direction Indicator */}
+          <div className="pointer-events-auto hidden xl:flex items-center gap-2 bg-obsidian-surface/95 border border-obsidian-border px-3 py-1.5 rounded-xs backdrop-blur-md shadow-xl select-none text-obsidian-muted font-mono text-2xs">
+            <span className="text-acid-lime font-bold">DIRECTION:</span>
+            <span>Tweak sliders in Inspector on right ▸</span>
+          </div>
+        </div>
+      )}
+
+      {/* FLOATING GUIDANCE NOTIFICATION WHEN IN DEFAULT ORIGINAL PHOTOGRAPH MODE */}
+      {sourceImage && config.mode === 'original' && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-30 px-3.5 py-1.5 bg-obsidian-950/95 border border-acid-lime/70 text-white rounded-xs shadow-2xl backdrop-blur-md flex items-center gap-2.5 animate-in fade-in select-none">
           <div className="w-2 h-2 rounded-full bg-acid-lime animate-pulse" />
-          <span className="font-mono text-2xs font-semibold text-white truncate max-w-[180px]" title={imageMetadata.name}>
-            {imageMetadata.name}
+          <span className="font-mono text-2xs uppercase tracking-wider text-acid-lime font-bold">
+            RAW PHOTOGRAPH LOADED
           </span>
-          <span className="text-obsidian-border font-mono text-2xs">/</span>
-          <span className="font-mono text-2xs text-obsidian-muted">
-            {imageMetadata.width}×{imageMetadata.height}px
-          </span>
-          <span className="text-obsidian-border font-mono text-2xs">/</span>
-          <span className="font-mono text-2xs text-acid-lime font-bold">
-            {Math.round(zoom * 100)}%
+          <span className="text-obsidian-muted font-mono text-2xs hidden sm:inline">
+            ▸ Select any style above or in the left sidebar to transform into generative art
           </span>
         </div>
       )}
@@ -317,6 +422,7 @@ export const CanvasStage: React.FC = () => {
           style={{
             width: `${fitDimensions.width}px`,
             height: `${fitDimensions.height}px`,
+            imageRendering: config.mode === 'pixel' || config.mode === 'dither' ? 'pixelated' : 'auto',
           }}
           className="border border-obsidian-border bg-obsidian block max-w-none shadow-crisp-border"
         />
@@ -396,7 +502,7 @@ export const CanvasStage: React.FC = () => {
 
           <IconButton
             size="xs"
-            title="Toggle Split Comparison (S)"
+            title="Toggle Split Comparison (S) — Drag slider to compare raw photo against generative output"
             active={isSplitView}
             onClick={toggleSplitView}
           >
@@ -407,7 +513,7 @@ export const CanvasStage: React.FC = () => {
 
           <IconButton
             size="xs"
-            title="Zoom Out"
+            title="Zoom Out (-) — Decrease magnification"
             onClick={() => setZoom(zoom - 0.2)}
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -415,7 +521,7 @@ export const CanvasStage: React.FC = () => {
 
           <button
             onClick={() => setZoom(1)}
-            title="Reset Zoom to 100%"
+            title="Reset Zoom to 100% (Actual Pixel Resolution)"
             className="font-mono text-2xs px-1.5 text-obsidian-text hover:text-white w-12 text-center"
           >
             {Math.round(zoom * 100)}%
@@ -423,7 +529,7 @@ export const CanvasStage: React.FC = () => {
 
           <IconButton
             size="xs"
-            title="Zoom In"
+            title="Zoom In (+) — Increase magnification"
             onClick={() => setZoom(zoom + 0.2)}
           >
             <ZoomIn className="w-3.5 h-3.5" />
@@ -433,7 +539,7 @@ export const CanvasStage: React.FC = () => {
 
           <IconButton
             size="xs"
-            title="Fit to Screen (F)"
+            title="Fit to Screen (F) — Prominently scale image to fill available viewport"
             onClick={fitToScreen}
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -441,7 +547,7 @@ export const CanvasStage: React.FC = () => {
 
           <IconButton
             size="xs"
-            title="Reset Canvas Position"
+            title="Reset Canvas Position — Recenter canvas and clear pan offset"
             onClick={resetViewport}
           >
             <RotateCcw className="w-3.5 h-3.5" />

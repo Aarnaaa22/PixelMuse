@@ -170,7 +170,7 @@ export const DEFAULT_LAYERS: StudioLayer[] = [
 ];
 
 export const DEFAULT_CONFIG: RenderConfig = {
-  mode: 'ascii',
+  mode: 'original',
   resolutionScale: 1,
   renderParams: DEFAULT_RENDER_PARAMS,
   color: DEFAULT_COLOR_CONFIG,
@@ -875,6 +875,11 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         zoom: 1,
         panX: 0,
         panY: 0,
+        // Crucial requirement: Default newly uploaded photograph to pristine original mode so user sees real photo first
+        config: {
+          ...state.config,
+          mode: 'original' as RenderMode,
+        },
       };
     });
   },

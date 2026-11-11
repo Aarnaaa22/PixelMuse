@@ -106,6 +106,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     tag: string;
     desc: string;
   }[] = [
+    // Source / Default
+    {
+      id: 'original',
+      name: 'Original Photograph',
+      category: 'special',
+      tag: 'PRISTINE RAW VIEW',
+      desc: 'Default unmodified photograph view. Displays your picture exactly as originally uploaded before applying generative styles.',
+    },
     // Character Based
     {
       id: 'ascii',

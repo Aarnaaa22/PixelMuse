@@ -117,6 +117,8 @@ export const InspectorPanel: React.FC = () => {
   } = useStudioStore();
 
   const allModesList: { id: RenderMode; label: string; group: string }[] = [
+    // Source / Passthrough
+    { id: 'original', label: 'Original Photograph (Pristine)', group: 'Source' },
     // Character Based
     { id: 'ascii', label: 'ASCII Glyph', group: 'Character Based' },
     // Geometric
@@ -187,13 +189,25 @@ export const InspectorPanel: React.FC = () => {
           onReset={resetRenderSection}
           badge={config.mode}
         >
+          {/* Active Mode Notice if in Original View */}
+          {config.mode === 'original' && (
+            <div className="p-3 bg-acid-lime/10 border border-acid-lime/40 rounded-xs space-y-1">
+              <span className="font-mono text-2xs uppercase tracking-wider text-acid-lime font-bold block">
+                ★ Raw Photograph Active
+              </span>
+              <p className="font-sans text-[11px] text-obsidian-text leading-relaxed">
+                Viewing unmodified source image. Select a raster engine from the dropdown below or the styles bar above to begin transforming into generative art.
+              </p>
+            </div>
+          )}
+
           {/* Render Mode Categorized Select Dropdown */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
                 Raster Engine ({allModesList.length} Modes)
               </label>
-              <span title="Select active raster engine">
+              <span title="Select active raster engine: Choose between original view, character glyphs, retro pixels, or geometric matrix">
                 <Info className="w-3 h-3 text-obsidian-muted" />
               </span>
             </div>
@@ -201,6 +215,7 @@ export const InspectorPanel: React.FC = () => {
             <select
               value={config.mode}
               onChange={(e) => setMode(e.target.value as RenderMode)}
+              title="Select active raster engine"
               className="w-full bg-obsidian-950 border border-obsidian-border hover:border-acid-lime/60 px-3 py-2 font-mono text-xs text-white focus:outline-none focus:border-acid-lime rounded-xs cursor-pointer"
             >
               {groups.map((group) => (
@@ -225,6 +240,7 @@ export const InspectorPanel: React.FC = () => {
             max={48}
             step={1}
             unit="px"
+            description="Controls glyph pitch or pixel block size. Smaller values capture crisp photographic details; larger values create bold, stylized mosaic blocks."
             onChange={(val) => {
               updateRenderParams({ cellSize: val });
               updateAsciiConfig({ fontSize: val, lineHeight: val });
@@ -241,6 +257,7 @@ export const InspectorPanel: React.FC = () => {
             max={2.0}
             step={0.1}
             unit="x"
+            description="Sampling grid frequency multiplier. Higher values yield finer edge resolution."
             onChange={(val) => updateRenderParams({ density: val })}
           />
 
@@ -253,10 +270,11 @@ export const InspectorPanel: React.FC = () => {
               max={100}
               step={5}
               unit="%"
+              description="Adjusts fill density of geometric shapes within each cell block."
               onChange={(val) => updateRenderParams({ coverage: val })}
             />
           ) : (
-            <div className="flex items-center justify-between py-1 opacity-40">
+            <div className="flex items-center justify-between py-1 opacity-40" title="Fixed cell density for this raster engine">
               <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
                 Raster Coverage
               </span>
@@ -275,6 +293,7 @@ export const InspectorPanel: React.FC = () => {
             step={5}
             unit="%"
             accentColor="violet"
+            description="Uses Sobel convolution edge detection to outline high-contrast contours for graphic punch."
             onChange={(val) => updateRenderParams({ edgeEmphasis: val })}
           />
 
@@ -416,6 +435,7 @@ export const InspectorPanel: React.FC = () => {
             min={-50}
             max={50}
             step={1}
+            description="Boosts or dims overall photographic sensor exposure before rasterization."
             onChange={(val) => {
               updateColorConfig({ brightness: val });
               updateAsciiConfig({ brightness: val });
@@ -428,6 +448,7 @@ export const InspectorPanel: React.FC = () => {
             min={-50}
             max={80}
             step={1}
+            description="Expands the dynamic separation between dark shadows and radiant highlights."
             onChange={(val) => {
               updateColorConfig({ contrast: val });
               updateAsciiConfig({ contrast: val });
@@ -441,6 +462,7 @@ export const InspectorPanel: React.FC = () => {
             max={3}
             step={0.1}
             unit="x"
+            description="Increases color vibrancy or desaturates down to stark monochrome."
             onChange={(val) => updateColorConfig({ saturation: val })}
           />
 
@@ -490,6 +512,7 @@ export const InspectorPanel: React.FC = () => {
               max={1}
               step={0.05}
               unit="x"
+              description="Blends the chosen accent tint color across the entire image canvas."
               onChange={(val) => updateColorConfig({ tintOpacity: val })}
             />
 
@@ -696,6 +719,7 @@ export const InspectorPanel: React.FC = () => {
             step={1}
             unit="px"
             accentColor="lime"
+            description="Post-raster 8-bit quantization for chunky retro arcade aesthetics."
             onChange={(val) => updateEffectsConfig({ pixelation: val })}
           />
 
@@ -708,6 +732,7 @@ export const InspectorPanel: React.FC = () => {
             step={0.05}
             unit="x"
             accentColor="lime"
+            description="Simulates commercial print CMYK offset screen dots."
             onChange={(val) => updateEffectsConfig({ halftone: val })}
           />
 
@@ -719,6 +744,7 @@ export const InspectorPanel: React.FC = () => {
             step={1}
             unit="px"
             accentColor="violet"
+            description="Diffuses radiant optical luminescence around luminous glyphs and highlights."
             onChange={(val) => {
               updateEffectsConfig({ bloom: val });
               updateAsciiConfig({ glow: val });
@@ -732,6 +758,7 @@ export const InspectorPanel: React.FC = () => {
             max={1}
             step={0.05}
             unit="x"
+            description="Softly darkens the outer corners to draw visual focus toward the center."
             onChange={(val) => updateEffectsConfig({ vignette: val })}
           />
 
@@ -742,6 +769,7 @@ export const InspectorPanel: React.FC = () => {
             max={1}
             step={0.05}
             unit="x"
+            description="Emulates retro cathode-ray-tube arcade monitor scanline beam spacing."
             onChange={(val) => updateEffectsConfig({ scanlines: val })}
           />
 
@@ -752,6 +780,7 @@ export const InspectorPanel: React.FC = () => {
             max={1}
             step={0.05}
             unit="x"
+            description="Injects organic 35mm silver halide noise for cinematic texture."
             onChange={(val) => updateEffectsConfig({ filmGrain: val })}
           />
 
@@ -763,6 +792,7 @@ export const InspectorPanel: React.FC = () => {
             max={1}
             step={0.05}
             unit="x"
+            description="Adds subtle vintage archival dust flecks and analog micro-scratches."
             onChange={(val) => updateEffectsConfig({ filmDust: val })}
           />
 
@@ -774,6 +804,7 @@ export const InspectorPanel: React.FC = () => {
             step={1}
             unit="px"
             accentColor="coral"
+            description="Splits RGB color channels laterally for optical prism lens distortion."
             onChange={(val) => updateEffectsConfig({ chromaticAberration: val })}
           />
 
@@ -785,6 +816,7 @@ export const InspectorPanel: React.FC = () => {
             step={0.05}
             unit="x"
             accentColor="coral"
+            description="Simulates broadcast sync loss and horizontal video displacement glitch."
             onChange={(val) => updateEffectsConfig({ glitch: val })}
           />
         </InspectorSection>

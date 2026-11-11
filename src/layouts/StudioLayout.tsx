@@ -47,7 +47,7 @@ export const StudioLayout: React.FC = () => {
       />
 
       {/* 2. MAIN WORKSPACE: LEFT SIDEBAR + CENTER CANVAS + RIGHT INSPECTOR */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative">
         {/* Left Sidebar: Pinned on Desktop (lg+), Modal Drawer on Tablet/Mobile */}
         <div
           className={`
@@ -78,7 +78,7 @@ export const StudioLayout: React.FC = () => {
         )}
 
         {/* Center Canvas Stage & Bottom Timeline */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        <div className="flex-1 min-h-0 flex flex-col h-full overflow-hidden relative">
           {/* Mobile Quick Drawer Toggle Bar (< lg) */}
           <div className="lg:hidden absolute top-2 left-2 right-2 z-30 flex items-center justify-between pointer-events-none">
             <button

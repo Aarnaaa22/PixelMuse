@@ -216,6 +216,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
             size="sm"
             icon={<Download className="w-3.5 h-3.5 text-black" />}
             onClick={onOpenExport}
+            title="Export Master Artwork — Download print-ready 4K PNG, vector SVG, or animated MP4 (Ctrl+E)"
           >
             Export
           </Button>

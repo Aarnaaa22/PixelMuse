@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Pause, Repeat, SkipBack, SkipForward, Activity, FastForward } from 'lucide-react';
+import { Play, Pause, Repeat, SkipBack, SkipForward, Activity } from 'lucide-react';
 import { IconButton } from '../ui';
 import { useStudioStore } from '../../stores';
 import { cn } from '../../utilities';
@@ -25,13 +25,13 @@ export const TimelineBar: React.FC = () => {
   };
 
   return (
-    <footer className="h-12 bg-obsidian-950 border-t border-obsidian-border px-4 flex items-center justify-between z-20 select-none">
+    <footer className="h-12 shrink-0 bg-obsidian-950 border-t border-obsidian-border px-4 flex items-center justify-between z-20 select-none">
       {/* Left: Play/Pause, Frame Steppers, and Loop */}
       <div className="flex items-center gap-2">
         <IconButton
           size="sm"
           variant={isPlaying ? 'lime' : 'default'}
-          title={isPlaying ? 'Pause Motion (Space)' : 'Play Motion (Space)'}
+          title={isPlaying ? 'Pause Motion (Spacebar) — Halt raster animations' : 'Play Motion (Spacebar) — Animate generative waves and matrix rain'}
           onClick={togglePlayback}
         >
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
@@ -39,7 +39,7 @@ export const TimelineBar: React.FC = () => {
 
         <IconButton
           size="xs"
-          title="Rewind to 00:00"
+          title="Rewind to 00:00 — Reset motion time to initial frame"
           onClick={() => updateMotionConfig({ currentTime: 0 })}
         >
           <SkipBack className="w-3 h-3" />
@@ -47,7 +47,7 @@ export const TimelineBar: React.FC = () => {
 
         <IconButton
           size="xs"
-          title="Step Forward 1s"
+          title="Step Forward 1s — Advance animation position"
           onClick={() => updateMotionConfig({ currentTime: Math.min(duration, currentTime + 1) })}
         >
           <SkipForward className="w-3 h-3" />
@@ -56,7 +56,7 @@ export const TimelineBar: React.FC = () => {
         <IconButton
           size="xs"
           active={loop}
-          title={loop ? 'Loop Enabled' : 'Loop Disabled'}
+          title={loop ? 'Loop Enabled — Repeat animation continuously' : 'Loop Disabled — Stop at timeline end'}
           onClick={() => updateMotionConfig({ loop: !loop })}
         >
           <Repeat className="w-3 h-3" />
@@ -65,7 +65,10 @@ export const TimelineBar: React.FC = () => {
         <div className="h-4 w-px bg-obsidian-border mx-1" />
 
         {/* Current Animation Time Display */}
-        <div className="font-mono text-xs text-white tracking-widest font-semibold flex items-center gap-1.5">
+        <div
+          className="font-mono text-xs text-white tracking-widest font-semibold flex items-center gap-1.5"
+          title="Elapsed animation time / total duration"
+        >
           <span className="text-acid-lime">{formatTime(currentTime)}</span>
           <span className="text-obsidian-muted">/</span>
           <span className="text-obsidian-muted">{formatTime(duration)}</span>
@@ -73,7 +76,10 @@ export const TimelineBar: React.FC = () => {
       </div>
 
       {/* Center: Timeline Scrubber Track */}
-      <div className="flex-1 max-w-xl mx-6 flex items-center gap-3">
+      <div
+        className="flex-1 max-w-xl mx-6 flex items-center gap-3"
+        title="Scrub Animation Timeline — Drag slider to preview effect across time"
+      >
         <span className="font-mono text-2xs uppercase text-obsidian-muted tracking-wider">
           Seek
         </span>
@@ -85,6 +91,7 @@ export const TimelineBar: React.FC = () => {
             step={0.05}
             value={currentTime}
             onChange={handleSeek}
+            title={`Current Frame: ${currentTime.toFixed(2)}s`}
             className="w-full h-1 bg-obsidian-border rounded-none appearance-none cursor-pointer accent-acid-lime"
             style={{
               background: `linear-gradient(to right, #CCFF00 ${(currentTime / duration) * 100}%, #1F1F28 ${(currentTime / duration) * 100}%)`,
@@ -95,28 +102,29 @@ export const TimelineBar: React.FC = () => {
 
       {/* Right: Oscillator Diagnostics & Speed Selector */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5 font-mono text-2xs">
+        <div
+          className="flex items-center gap-1.5 font-mono text-2xs"
+          title="Oscillation Waveform: Sinusoidal mathematical harmonics"
+        >
           <Activity className="w-3.5 h-3.5 text-electric-violet" />
           <span className="text-obsidian-muted uppercase">WAVE:</span>
-          <span className="text-white uppercase font-medium">{type}</span>
+          <span className="text-white uppercase">{type || 'SINE'}</span>
         </div>
 
-        <div className="h-4 w-px bg-obsidian-border" />
-
-        <div className="flex items-center gap-1 font-mono text-2xs">
-          <FastForward className="w-3 h-3 text-obsidian-muted" />
-          {[0.5, 1, 1.5, 2].map((spd) => (
+        <div className="flex items-center gap-1">
+          {[1, 1.5, 2].map((s) => (
             <button
-              key={spd}
-              onClick={() => updateMotionConfig({ speed: spd, animSpeed: spd })}
+              key={s}
+              onClick={() => updateMotionConfig({ speed: s, animSpeed: s })}
+              title={`Playback Rate: ${s}x Realtime`}
               className={cn(
-                'px-1.5 py-0.5 rounded-xs border uppercase text-[10px]',
-                (speed === spd || config.motion.animSpeed === spd)
-                  ? 'border-acid-lime text-acid-lime bg-acid-lime/10 font-semibold'
-                  : 'border-obsidian-border text-obsidian-muted hover:text-white'
+                'px-1.5 py-0.5 font-mono text-2xs uppercase rounded-xs transition-colors',
+                (speed === s || config.motion.animSpeed === s)
+                  ? 'bg-acid-lime text-black font-bold'
+                  : 'text-obsidian-muted hover:text-white'
               )}
             >
-              {spd}x
+              {s}x
             </button>
           ))}
         </div>
