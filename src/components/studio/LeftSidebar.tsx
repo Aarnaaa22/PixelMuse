@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   UploadCloud,
   Sparkles,
@@ -13,10 +14,14 @@ import {
   Check,
   Image as ImageIcon,
   Plus,
+  Search,
+  ExternalLink,
+  RotateCcw,
 } from 'lucide-react';
 import { Button, Badge } from '../ui';
 import { useStudioStore, useAuthStore } from '../../stores';
 import { CURATED_PRESETS } from '../../presets/curatedPresets';
+import { COMMUNITY_RECIPES } from '../../recipes/communityRecipes';
 import { useImageDrop } from '../../hooks';
 import { SAMPLE_PHOTOS, createSamplePhotoImage } from '../../utilities/samplePhotos';
 import { SidebarTab } from '../../types/studio';
@@ -28,6 +33,7 @@ interface LeftSidebarProps {
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { onFileInputChange } = useImageDrop();
 
@@ -52,11 +58,17 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
     toggleLayerVisibility,
     setLayerOpacity,
     pushHistory,
+    activeRecipeId,
+    loadRecipe,
+    resetToRecipeDefaults,
   } = useStudioStore();
 
   const { isPresetFavorited, toggleFavoritePreset } = useAuthStore();
   const [presetToast, setPresetToast] = useState<string | null>(null);
   const [presetFilter, setPresetFilter] = useState<'all' | 'favorites'>('all');
+  const [presetSource, setPresetSource] = useState<'recipes' | 'curated'>('recipes');
+  const [recipeSearch, setRecipeSearch] = useState('');
+  const [recipeCategory, setRecipeCategory] = useState('all');
 
   const tabs: { id: SidebarTab; label: string; icon: React.ReactNode }[] = [
     { id: 'upload', label: 'Upload', icon: <UploadCloud className="w-4 h-4" /> },
@@ -552,140 +564,308 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
           </div>
         )}
 
-        {/* TAB 2: PRESETS */}
+        {/* TAB 2: PRESETS & ART LIBRARY */}
         {activeSidebarTab === 'presets' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-obsidian-border">
-              <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Curated Style Presets
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPresetFilter('all')}
-                  className={`px-2 py-0.5 font-mono text-[10px] uppercase rounded-xs transition-colors ${
-                    presetFilter === 'all'
-                      ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/50'
-                      : 'text-obsidian-muted hover:text-white'
-                  }`}
-                >
-                  All ({CURATED_PRESETS.length})
-                </button>
-                <button
-                  onClick={() => setPresetFilter('favorites')}
-                  className={`px-2 py-0.5 font-mono text-[10px] uppercase rounded-xs transition-colors flex items-center gap-1 ${
-                    presetFilter === 'favorites'
-                      ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/50'
-                      : 'text-obsidian-muted hover:text-white'
-                  }`}
-                >
-                  <Star className="w-2.5 h-2.5 fill-current" />
-                  Favs
-                </button>
-              </div>
+            {/* Top Selector: Art Library vs Curated */}
+            <div className="flex items-center gap-1 p-0.5 bg-obsidian-950 border border-obsidian-border rounded-xs">
+              <button
+                onClick={() => setPresetSource('recipes')}
+                className={cn(
+                  'flex-1 py-1 px-2 font-mono text-2xs uppercase tracking-wider rounded-2xs transition-colors flex items-center justify-center gap-1.5',
+                  presetSource === 'recipes'
+                    ? 'bg-electric-violet/20 text-electric-violet border border-electric-violet/40 font-semibold'
+                    : 'text-obsidian-muted hover:text-white'
+                )}
+              >
+                <Sparkles className="w-3 h-3 text-electric-violet" />
+                Art Library ({COMMUNITY_RECIPES.length})
+              </button>
+              <button
+                onClick={() => setPresetSource('curated')}
+                className={cn(
+                  'flex-1 py-1 px-2 font-mono text-2xs uppercase tracking-wider rounded-2xs transition-colors flex items-center justify-center gap-1.5',
+                  presetSource === 'curated'
+                    ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/40 font-semibold'
+                    : 'text-obsidian-muted hover:text-white'
+                )}
+              >
+                <Star className="w-3 h-3 text-acid-lime" />
+                Curated ({CURATED_PRESETS.length})
+              </button>
             </div>
 
-            {/* Preset Applied Toast */}
+            {/* Recipe / Preset Applied Toast */}
             {presetToast && (
               <div className="p-2.5 bg-acid-lime/10 border border-acid-lime/40 text-acid-lime font-mono text-2xs flex items-center gap-2 rounded-xs animate-fade-in">
                 <Check className="w-3 h-3 shrink-0" />
                 <div className="truncate">
-                  <span className="font-bold">Applied {presetToast}:</span> Customize any setting in Inspector
+                  <span className="font-bold">Applied {presetToast}:</span> Engine updated live
                 </div>
               </div>
             )}
 
-            <div className="space-y-3">
-              {CURATED_PRESETS.filter((p) => {
-                if (presetFilter === 'favorites') {
-                  return isPresetFavorited(p.id);
-                }
-                return true;
-              }).map((preset) => {
-                const isFav = isPresetFavorited(preset.id);
-                const isCurrentlyActive = config.mode === preset.config.mode;
-
-                return (
-                  <div
-                    key={preset.id}
-                    className={`border bg-obsidian-950 p-3 space-y-2.5 rounded-xs group transition-all ${
-                      isCurrentlyActive
-                        ? 'border-obsidian-border-hover shadow-[0_0_15px_rgba(204,255,0,0.05)]'
-                        : 'border-obsidian-border hover:border-obsidian-border-hover'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: preset.accentColor }}
-                        />
-                        <span className="font-mono text-xs uppercase text-white font-semibold">
-                          {preset.title}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => toggleFavoritePreset(preset.id)}
-                          className={`p-1 hover:text-acid-lime transition-colors ${
-                            isFav ? 'text-acid-lime' : 'text-obsidian-muted'
-                          }`}
-                          title={isFav ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-acid-lime' : ''}`} />
-                        </button>
-                        <Badge variant="outline" size="xs">
-                          {preset.config.mode.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <p className="font-mono text-2xs text-obsidian-muted leading-relaxed">
-                      {preset.subtitle}
-                    </p>
-
-                    {/* Palette Bar */}
-                    <div className="flex h-1.5 w-full border border-obsidian-border overflow-hidden rounded-2xs">
-                      {preset.config.palette.colors.map((c, i) => (
-                        <div key={i} className="flex-1 h-full" style={{ backgroundColor: c }} />
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                      {preset.tags.map((t) => (
-                        <span
-                          key={t}
-                          className="font-mono text-[9px] uppercase px-1.5 py-0.5 bg-obsidian-surface text-obsidian-muted border border-obsidian-border/50 rounded-2xs"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-
-                    <Button
-                      variant={isCurrentlyActive ? 'primary' : 'secondary'}
-                      size="xs"
-                      className="w-full justify-center font-mono"
-                      onClick={() => {
-                        pushHistory();
-                        updateConfig(preset.config);
-                        setPresetToast(preset.title);
-                        setTimeout(() => setPresetToast(null), 3000);
-                      }}
-                    >
-                      {isCurrentlyActive ? 'Re-Apply Preset' : 'Apply Preset'}
-                    </Button>
-                  </div>
-                );
-              })}
-
-              {presetFilter === 'favorites' && CURATED_PRESETS.filter((p) => isPresetFavorited(p.id)).length === 0 && (
-                <div className="py-8 text-center font-mono text-2xs text-obsidian-muted border border-dashed border-obsidian-border p-4 rounded-xs">
-                  No favorite presets starred yet. Click the star icon on any preset to save it to your cloud favorites.
+            {/* ART LIBRARY RECIPES SUBVIEW */}
+            {presetSource === 'recipes' && (
+              <div className="space-y-3">
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-obsidian-muted absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={recipeSearch}
+                    onChange={(e) => setRecipeSearch(e.target.value)}
+                    placeholder="Search 48 recipes..."
+                    className="w-full bg-obsidian-950 border border-obsidian-border hover:border-obsidian-border-hover focus:border-electric-violet text-white font-mono text-2xs pl-8 pr-3 py-1.5 rounded-xs outline-none transition-colors"
+                  />
                 </div>
-              )}
-            </div>
+
+                {/* Categories */}
+                <div className="flex flex-wrap gap-1">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'ascii', label: 'ASCII' },
+                    { id: 'matrix-terminal', label: 'Matrix' },
+                    { id: 'geometric', label: 'Geometric' },
+                    { id: 'dithering', label: 'Dither' },
+                    { id: 'mosaic-pixels', label: 'Mosaic' },
+                    { id: 'abstract', label: 'Abstract' },
+                    { id: 'backgrounds', label: 'Bg' },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setRecipeCategory(cat.id)}
+                      className={cn(
+                        'px-2 py-0.5 font-mono text-[9px] uppercase rounded-2xs border transition-colors',
+                        recipeCategory === cat.id
+                          ? 'bg-electric-violet/20 border-electric-violet text-electric-violet-light font-semibold'
+                          : 'bg-obsidian-950 border-obsidian-border text-obsidian-muted hover:text-white'
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Link to Full Visual Art Library */}
+                <button
+                  onClick={() => navigate('/library')}
+                  className="w-full flex items-center justify-between p-2 rounded-xs bg-obsidian-950 border border-obsidian-border hover:border-electric-violet/50 text-obsidian-muted hover:text-white transition-colors group"
+                >
+                  <span className="font-mono text-2xs uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-electric-violet" />
+                    Open Visual Art Library
+                  </span>
+                  <ExternalLink className="w-3 h-3 text-obsidian-muted group-hover:text-electric-violet transition-colors" />
+                </button>
+
+                {/* Recipe Cards List */}
+                <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+                  {COMMUNITY_RECIPES.filter((r) => {
+                    if (recipeCategory !== 'all' && r.category !== recipeCategory) return false;
+                    if (recipeSearch.trim()) {
+                      const q = recipeSearch.toLowerCase();
+                      return (
+                        r.name.toLowerCase().includes(q) ||
+                        r.description.toLowerCase().includes(q) ||
+                        r.tags.some((t) => t.toLowerCase().includes(q)) ||
+                        (typeof r.creator === 'string' && r.creator.toLowerCase().includes(q))
+                      );
+                    }
+                    return true;
+                  }).map((recipe) => {
+                    const isActive = activeRecipeId === recipe.id;
+                    return (
+                      <div
+                        key={recipe.id}
+                        className={cn(
+                          'border bg-obsidian-950 p-2.5 space-y-2 rounded-xs transition-all',
+                          isActive
+                            ? 'border-electric-violet shadow-[0_0_15px_rgba(157,0,255,0.15)] ring-1 ring-electric-violet/50'
+                            : 'border-obsidian-border hover:border-obsidian-border-hover'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-mono text-xs uppercase text-white font-semibold truncate" title={recipe.name}>
+                            {recipe.name}
+                          </span>
+                          <Badge variant={isActive ? 'violet' : 'outline'} size="xs">
+                            {recipe.category.toUpperCase()}
+                          </Badge>
+                        </div>
+
+                        <p className="font-mono text-[10px] text-obsidian-muted leading-tight line-clamp-2">
+                          {recipe.description}
+                        </p>
+
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-obsidian-border/50">
+                          <span className="font-mono text-[9px] text-obsidian-muted truncate">
+                            by {typeof recipe.creator === 'string' ? recipe.creator : 'PixelMuse'}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            {isActive ? (
+                              <Button
+                                variant="secondary"
+                                size="xs"
+                                className="font-mono text-[10px] py-0.5 px-2 text-acid-lime border-acid-lime/40"
+                                onClick={() => {
+                                  resetToRecipeDefaults();
+                                  setPresetToast(`${recipe.name} (Reset Defaults)`);
+                                  setTimeout(() => setPresetToast(null), 2500);
+                                }}
+                              >
+                                <RotateCcw className="w-2.5 h-2.5 mr-1" />
+                                Reset
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                size="xs"
+                                className="font-mono text-[10px] py-0.5 px-2 bg-electric-violet hover:bg-electric-violet-light text-white border-none"
+                                onClick={async () => {
+                                  await loadRecipe(recipe, false);
+                                  setPresetToast(recipe.name);
+                                  setTimeout(() => setPresetToast(null), 2500);
+                                }}
+                              >
+                                Apply Style
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* CURATED PRESETS SUBVIEW */}
+            {presetSource === 'curated' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-1 border-b border-obsidian-border">
+                  <span className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                    Curated Presets
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPresetFilter('all')}
+                      className={`px-2 py-0.5 font-mono text-[10px] uppercase rounded-xs transition-colors ${
+                        presetFilter === 'all'
+                          ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/50'
+                          : 'text-obsidian-muted hover:text-white'
+                      }`}
+                    >
+                      All ({CURATED_PRESETS.length})
+                    </button>
+                    <button
+                      onClick={() => setPresetFilter('favorites')}
+                      className={`px-2 py-0.5 font-mono text-[10px] uppercase rounded-xs transition-colors flex items-center gap-1 ${
+                        presetFilter === 'favorites'
+                          ? 'bg-acid-lime/20 text-acid-lime border border-acid-lime/50'
+                          : 'text-obsidian-muted hover:text-white'
+                      }`}
+                    >
+                      <Star className="w-2.5 h-2.5 fill-current" />
+                      Favs
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {CURATED_PRESETS.filter((p) => {
+                    if (presetFilter === 'favorites') {
+                      return isPresetFavorited(p.id);
+                    }
+                    return true;
+                  }).map((preset) => {
+                    const isFav = isPresetFavorited(preset.id);
+                    const isCurrentlyActive = config.mode === preset.config.mode;
+
+                    return (
+                      <div
+                        key={preset.id}
+                        className={`border bg-obsidian-950 p-3 space-y-2.5 rounded-xs group transition-all ${
+                          isCurrentlyActive
+                            ? 'border-obsidian-border-hover shadow-[0_0_15px_rgba(204,255,0,0.05)]'
+                            : 'border-obsidian-border hover:border-obsidian-border-hover'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: preset.accentColor }}
+                            />
+                            <span className="font-mono text-xs uppercase text-white font-semibold">
+                              {preset.title}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => toggleFavoritePreset(preset.id)}
+                              className={`p-1 hover:text-acid-lime transition-colors ${
+                                isFav ? 'text-acid-lime' : 'text-obsidian-muted'
+                              }`}
+                              title={isFav ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                              <Star className={`w-3.5 h-3.5 ${isFav ? 'fill-acid-lime' : ''}`} />
+                            </button>
+                            <Badge variant="outline" size="xs">
+                              {preset.config.mode.toUpperCase()}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <p className="font-mono text-2xs text-obsidian-muted leading-relaxed">
+                          {preset.subtitle}
+                        </p>
+
+                        <div className="flex h-1.5 w-full border border-obsidian-border overflow-hidden rounded-2xs">
+                          {preset.config.palette.colors.map((c, i) => (
+                            <div key={i} className="flex-1 h-full" style={{ backgroundColor: c }} />
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                          {preset.tags.map((t) => (
+                            <span
+                              key={t}
+                              className="font-mono text-[9px] uppercase px-1.5 py-0.5 bg-obsidian-surface text-obsidian-muted border border-obsidian-border/50 rounded-2xs"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+
+                        <Button
+                          variant={isCurrentlyActive ? 'primary' : 'secondary'}
+                          size="xs"
+                          className="w-full justify-center font-mono"
+                          onClick={() => {
+                            pushHistory();
+                            updateConfig(preset.config);
+                            setPresetToast(preset.title);
+                            setTimeout(() => setPresetToast(null), 3000);
+                          }}
+                        >
+                          {isCurrentlyActive ? 'Re-Apply Preset' : 'Apply Preset'}
+                        </Button>
+                      </div>
+                    );
+                  })}
+
+                  {presetFilter === 'favorites' && CURATED_PRESETS.filter((p) => isPresetFavorited(p.id)).length === 0 && (
+                    <div className="py-8 text-center font-mono text-2xs text-obsidian-muted border border-dashed border-obsidian-border p-4 rounded-xs">
+                      No favorite presets starred yet. Click the star icon on any preset to save it to your cloud favorites.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

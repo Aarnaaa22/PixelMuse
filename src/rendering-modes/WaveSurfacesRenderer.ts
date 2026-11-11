@@ -167,3 +167,4 @@ export class WaveSurfacesRenderer extends BaseRenderer {
     }
   }
 }
+

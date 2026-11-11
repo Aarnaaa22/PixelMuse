@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Undo2,
   Redo2,
@@ -10,6 +11,7 @@ import {
   User,
   FolderKanban,
   Cloud,
+  Sparkles,
 } from 'lucide-react';
 import { BrandLogo } from '../common';
 import { Button, IconButton, Badge } from '../ui';
@@ -22,6 +24,7 @@ interface TopToolbarProps {
 }
 
 export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
+  const navigate = useNavigate();
   const {
     config,
     projectName,
@@ -32,6 +35,8 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
     historyFuture,
     resetAll,
     saveProject,
+    activeRecipe,
+    resetToRecipeDefaults,
   } = useStudioStore();
 
   const {
@@ -46,6 +51,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(projectName);
   const [saveToast, setSaveToast] = useState(false);
+  const [resetRecipeToast, setResetRecipeToast] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const canUndo = historyPast.length > 0;
@@ -121,6 +127,39 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({ onOpenExport }) => {
           >
             Projects
           </Button>
+
+          {/* Art Library Quick Navigation */}
+          <Button
+            variant="ghost"
+            size="xs"
+            icon={<Sparkles className="w-3.5 h-3.5 text-electric-violet" />}
+            onClick={() => navigate('/library')}
+            className="text-obsidian-muted hover:text-white"
+            title="Browse Community Generative Art Library"
+          >
+            Art Library
+          </Button>
+
+          {/* Active Recipe Indicator & Quick Reset */}
+          {activeRecipe && (
+            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-xs bg-electric-violet/10 border border-electric-violet/30">
+              <Sparkles className="w-3 h-3 text-electric-violet shrink-0" />
+              <span className="font-mono text-2xs uppercase text-electric-violet font-semibold tracking-wider truncate max-w-[140px]" title={activeRecipe.name}>
+                {activeRecipe.name}
+              </span>
+              <button
+                onClick={() => {
+                  resetToRecipeDefaults();
+                  setResetRecipeToast(true);
+                  setTimeout(() => setResetRecipeToast(false), 2000);
+                }}
+                className="ml-1 text-[10px] font-mono uppercase text-obsidian-muted hover:text-acid-lime underline transition-colors"
+                title="Reset this recipe to its default parameters"
+              >
+                {resetRecipeToast ? '✓ Reset' : 'Reset Defaults'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Center: Undo / Redo / Reset Operations */}

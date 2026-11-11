@@ -4,7 +4,6 @@ import { Star, Sparkles, Sliders, Play, CheckCircle2, AlertTriangle } from 'luci
 import { CommunityRecipe } from '../../types/recipe';
 import { RecipeCanvasPreview } from './RecipeCanvasPreview';
 import { useLibraryStore, useStudioStore } from '../../stores';
-import { createSamplePhotoImage } from '../../utilities/samplePhotos';
 import { Badge } from '../ui';
 
 interface RecipeCardProps {
@@ -14,38 +13,14 @@ interface RecipeCardProps {
 export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const navigate = useNavigate();
   const { toggleFavorite, isFavorite, openModal } = useLibraryStore();
-  const { updateConfig, setMode, setProjectName, sourceImage, setSourceImage } = useStudioStore();
+  const { loadRecipe } = useStudioStore();
 
   const favorite = isFavorite(recipe.id);
 
   const handleApplyToStudio = async (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Apply configuration
-    const conf = recipe.defaultConfig || recipe.config;
-    if (conf.mode) {
-      setMode(conf.mode);
-    }
-    updateConfig(conf);
-    setProjectName(recipe.name.toUpperCase().replace(/\s+/g, '_'));
-
-    // If no image is currently loaded in studio, supply the shared sculpture sample
-    if (!sourceImage) {
-      try {
-        const sample = await createSamplePhotoImage('marble-sculpture');
-        setSourceImage(sample, {
-          name: 'marble-sculpture.png',
-          width: 640,
-          height: 640,
-          aspectRatio: 1,
-          sizeBytes: 120000,
-        });
-      } catch (err) {
-        console.error('Failed to preload sample sculpture', err);
-      }
-    }
-
-    navigate('/studio');
+    await loadRecipe(recipe);
+    navigate(`/studio?recipe=${recipe.id}`);
   };
 
   const categoryDisplayNames: Record<string, string> = {

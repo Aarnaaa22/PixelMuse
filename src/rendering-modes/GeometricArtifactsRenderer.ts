@@ -139,3 +139,4 @@ export class GeometricArtifactsRenderer extends BaseRenderer {
     ctx.restore();
   }
 }
+

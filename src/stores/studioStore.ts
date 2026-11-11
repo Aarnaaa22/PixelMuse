@@ -14,8 +14,10 @@ import {
   LightingConfig,
   LightPoint,
   MaskConfig,
+  CentralRecipe,
 } from '../types';
 import { SidebarTab, StudioImageAsset } from '../types/studio';
+import { createSamplePhotoImage } from '../utilities/samplePhotos';
 
 export const BUILTIN_PALETTES: PalettePreset[] = [
   {
@@ -321,6 +323,13 @@ interface StudioState {
   resetViewport: () => void;
   fitToScreen: () => void;
   toggleSplitView: () => void;
+  // Active Art Library Recipe
+  activeRecipe: CentralRecipe | null;
+  activeRecipeId: string | null;
+  loadRecipe: (recipe: CentralRecipe, preloadSampleIfNoImage?: boolean) => Promise<void>;
+  resetToRecipeDefaults: () => void;
+  clearActiveRecipe: () => void;
+
   setSplitPosition: (pos: number) => void;
 }
 
@@ -330,6 +339,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   layers: DEFAULT_LAYERS,
   images: [],
   activeImageId: null,
+  activeRecipe: null,
+  activeRecipeId: null,
   sourceImage: null,
   imageMetadata: null,
   uploadError: null,
@@ -420,6 +431,84 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         [sectionId]: !state.collapsedSections[sectionId],
       },
     })),
+
+  loadRecipe: async (recipe, preloadSampleIfNoImage = true) => {
+    set({
+      activeRecipe: recipe,
+      activeRecipeId: recipe.id,
+      projectName: recipe.name.toUpperCase().replace(/\s+/g, '_'),
+    });
+    try {
+      localStorage.setItem('pixelmuse_active_recipe_id', recipe.id);
+    } catch {}
+
+    const conf = recipe.defaultConfig || recipe.config || {};
+    const merged: RenderConfig = {
+      ...DEFAULT_CONFIG,
+      ...conf,
+      renderParams: { ...DEFAULT_CONFIG.renderParams, ...(conf.renderParams || {}) },
+      color: { ...DEFAULT_CONFIG.color, ...(conf.color || {}) },
+      effects: { ...DEFAULT_CONFIG.effects, ...(conf.effects || {}) },
+      motion: { ...DEFAULT_CONFIG.motion, ...(conf.motion || {}) },
+      ascii: { ...DEFAULT_CONFIG.ascii, ...(conf.ascii || {}) },
+      dither: { ...DEFAULT_CONFIG.dither, ...(conf.dither || {}) },
+      mosaic: { ...DEFAULT_CONFIG.mosaic, ...(conf.mosaic || {}) },
+      halftone: { ...DEFAULT_CONFIG.halftone, ...(conf.halftone || {}) },
+    };
+
+    get().pushHistory();
+    set({ config: merged });
+
+    // If no image is currently selected, load a high-fidelity sample photograph
+    if (!get().sourceImage && preloadSampleIfNoImage) {
+      try {
+        set({ isImageLoading: true, uploadError: null });
+        const sampleId = recipe.previewConfig?.samplePhotoId || 'marble-sculpture';
+        const sample = await createSamplePhotoImage(sampleId);
+        get().setSourceImage(sample, {
+          name: `${sampleId}.png`,
+          width: 640,
+          height: 640,
+          aspectRatio: 1,
+          sizeBytes: 120000,
+        });
+      } catch (err) {
+        console.error('[PixelMuse Recipe Sample Load Error]:', err);
+      } finally {
+        set({ isImageLoading: false });
+      }
+    }
+  },
+
+  resetToRecipeDefaults: () => {
+    const { activeRecipe } = get();
+    if (!activeRecipe) {
+      get().resetAll();
+      return;
+    }
+    get().pushHistory();
+    const conf = activeRecipe.defaultConfig || activeRecipe.config || {};
+    const merged: RenderConfig = {
+      ...DEFAULT_CONFIG,
+      ...conf,
+      renderParams: { ...DEFAULT_CONFIG.renderParams, ...(conf.renderParams || {}) },
+      color: { ...DEFAULT_CONFIG.color, ...(conf.color || {}) },
+      effects: { ...DEFAULT_CONFIG.effects, ...(conf.effects || {}) },
+      motion: { ...DEFAULT_CONFIG.motion, ...(conf.motion || {}) },
+      ascii: { ...DEFAULT_CONFIG.ascii, ...(conf.ascii || {}) },
+      dither: { ...DEFAULT_CONFIG.dither, ...(conf.dither || {}) },
+      mosaic: { ...DEFAULT_CONFIG.mosaic, ...(conf.mosaic || {}) },
+      halftone: { ...DEFAULT_CONFIG.halftone, ...(conf.halftone || {}) },
+    };
+    set({ config: merged });
+  },
+
+  clearActiveRecipe: () => {
+    set({ activeRecipe: null, activeRecipeId: null });
+    try {
+      localStorage.removeItem('pixelmuse_active_recipe_id');
+    } catch {}
+  },
 
   setMode: (mode) => {
     get().pushHistory();

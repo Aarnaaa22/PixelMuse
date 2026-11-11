@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PanelLeft, Sliders, X } from 'lucide-react';
 import {
   TopToolbar,
@@ -11,11 +12,26 @@ import {
 import { KeyboardShortcutsModal } from '../components/studio/KeyboardShortcutsModal';
 import { StatusFooter } from '../components/common';
 import { useKeyboardShortcuts } from '../hooks';
+import { useStudioStore } from '../stores';
+import { COMMUNITY_RECIPES } from '../recipes/communityRecipes';
 
 export const StudioLayout: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const { activeRecipeId, loadRecipe, sourceImage } = useStudioStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<'none' | 'left' | 'right'>('none');
+
+  // Rehydrate active recipe from URL param ?recipe=<id> or localStorage
+  useEffect(() => {
+    const recipeQuery = searchParams.get('recipe') || localStorage.getItem('pixelmuse_active_recipe_id');
+    if (recipeQuery && recipeQuery !== activeRecipeId) {
+      const found = COMMUNITY_RECIPES.find((r) => r.id === recipeQuery);
+      if (found) {
+        loadRecipe(found, !sourceImage);
+      }
+    }
+  }, [searchParams, activeRecipeId, loadRecipe, sourceImage]);
 
   // Bind studio keyboard shortcuts
   useKeyboardShortcuts(

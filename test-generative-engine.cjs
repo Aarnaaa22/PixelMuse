@@ -203,3 +203,4 @@ if (passedTests === totalTests) {
   console.error('❌ SOME CHECKS FAILED.');
   process.exit(1);
 }
+

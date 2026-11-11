@@ -12,13 +12,12 @@ import {
 } from 'lucide-react';
 import { useLibraryStore, useStudioStore } from '../../stores';
 import { RecipeCanvasPreview } from './RecipeCanvasPreview';
-import { createSamplePhotoImage } from '../../utilities/samplePhotos';
 import { Badge } from '../ui';
 
 export const RecipeModal: React.FC = () => {
   const navigate = useNavigate();
   const { activeModalRecipe, closeModal, toggleFavorite, isFavorite } = useLibraryStore();
-  const { updateConfig, setMode, setProjectName, sourceImage, setSourceImage } = useStudioStore();
+  const { loadRecipe } = useStudioStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -34,30 +33,9 @@ export const RecipeModal: React.FC = () => {
   const favorite = isFavorite(recipe.id);
 
   const handleOpenInStudio = async () => {
-    const conf = recipe.defaultConfig || recipe.config;
-    if (conf.mode) {
-      setMode(conf.mode);
-    }
-    updateConfig(conf);
-    setProjectName(recipe.name.toUpperCase().replace(/\s+/g, '_'));
-
-    if (!sourceImage) {
-      try {
-        const sample = await createSamplePhotoImage('marble-sculpture');
-        setSourceImage(sample, {
-          name: 'marble-sculpture.png',
-          width: 640,
-          height: 640,
-          aspectRatio: 1,
-          sizeBytes: 120000,
-        });
-      } catch (err) {
-        console.error('Failed to load sample image for studio', err);
-      }
-    }
-
+    await loadRecipe(recipe);
     closeModal();
-    navigate('/studio');
+    navigate(`/studio?recipe=${recipe.id}`);
   };
 
   return (
