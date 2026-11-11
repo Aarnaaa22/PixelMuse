@@ -326,9 +326,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveSidebarTab(tab.id)}
               className={cn(
-                'flex flex-col items-center justify-center py-2 px-1 rounded-xs transition-colors border text-center',
+                'flex flex-col items-center justify-center py-2 px-1 rounded-xs transition-colors border text-center cursor-pointer',
                 isActive
                   ? 'bg-obsidian-surface border-acid-lime/50 text-white shadow-crisp-border'
                   : 'border-transparent text-obsidian-muted hover:text-white hover:bg-obsidian-subtle/40'
@@ -924,9 +925,10 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({ className }) => {
                   return (
                     <button
                       key={mode.id}
+                      type="button"
                       onClick={() => setMode(mode.id)}
                       className={cn(
-                        'w-full p-2.5 text-left border rounded-xs transition-all flex flex-col space-y-1',
+                        'w-full p-2.5 text-left border rounded-xs transition-all flex flex-col space-y-1 cursor-pointer',
                         isActive
                           ? 'border-acid-lime bg-obsidian-950 shadow-crisp-border'
                           : 'border-obsidian-border bg-obsidian-950 hover:border-obsidian-border-hover'

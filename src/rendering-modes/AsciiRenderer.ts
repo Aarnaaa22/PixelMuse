@@ -2,7 +2,6 @@ import { BaseRenderer } from './BaseRenderer';
 import { RenderConfig, RenderMode } from '../types';
 import { CellGridSampler } from '../image-processing/CellGridSampler';
 import { MotionEcosystem } from '../animation-engine';
-import { quantizer } from '../image-processing/ColorQuantizer';
 
 export const ASCII_GLYPH_PRESETS = [
   { id: 'standard', name: 'Standard Density', chars: ' .:-=+*#%@' },
@@ -23,31 +22,36 @@ export class AsciiRenderer extends BaseRenderer {
     time: number
   ): void {
     const { renderParams, ascii, motion, palette } = config;
-    const { cellSize, density, invert, edgeEmphasis, charSet } = renderParams;
+    const { cellSize = 12, density = 1.0, invert = false, edgeEmphasis = 0, charSet } = renderParams || {};
 
-    const chars = charSet || ascii.characters || ' .:-=+*#%@';
+    const rawChars = charSet || ascii?.characters || ' .:-=+*#%@';
+    // Ensure we always have non-empty character string
+    const chars = rawChars && rawChars.length > 0 ? rawChars : ' .:-=+*#%@';
     const charLen = chars.length;
 
     // Sample cell grid
     const grid = CellGridSampler.sample(source, cellSize, density, edgeEmphasis);
-    const fontSize = Math.max(6, Math.round(grid.cellHeight));
+    const fontSize = Math.max(8, Math.round(grid.cellHeight * 1.05));
 
     ctx.save();
-    ctx.font = `${fontSize}px ${ascii.fontFamily || '"JetBrains Mono", monospace'}`;
+    ctx.font = `bold ${fontSize}px ${ascii?.fontFamily || '"JetBrains Mono", monospace, sans-serif'}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // Optional glow
-    if (ascii.glow > 0) {
+    if (ascii?.glow && ascii.glow > 0) {
       ctx.shadowBlur = ascii.glow;
-      ctx.shadowColor = ascii.monochromeColor;
+      ctx.shadowColor = ascii.monochromeColor || '#CCFF00';
     }
+
+    const colorMode = ascii?.colorMode || 'original';
+    const monoColor = ascii?.monochromeColor || '#CCFF00';
 
     for (let i = 0; i < grid.cells.length; i++) {
       const cell = grid.cells[i];
       let { r, g, b, luminance, edge, x, y, width, height } = cell;
 
-      if (invert || ascii.invert) {
+      if (invert || ascii?.invert) {
         luminance = 1 - luminance;
         r = 255 - r;
         g = 255 - g;
@@ -61,13 +65,21 @@ export class AsciiRenderer extends BaseRenderer {
       if (char === ' ' || !char) continue;
 
       // Color selection
-      if (ascii.colorMode === 'original') {
-        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-      } else if (ascii.colorMode === 'palette') {
-        const quantized = quantizer.quantizePixel({ r, g, b }, palette.colors);
-        ctx.fillStyle = `rgb(${quantized.r}, ${quantized.g}, ${quantized.b})`;
+      if (colorMode === 'original') {
+        // Boost shadow levels so dark areas (hair, eyes, dark clothing) are clearly legible as colored glyphs
+        const boostR = Math.max(38, r);
+        const boostG = Math.max(38, g);
+        const boostB = Math.max(38, b);
+        ctx.fillStyle = `rgb(${boostR}, ${boostG}, ${boostB})`;
+      } else if (colorMode === 'palette' && palette?.colors && palette.colors.length > 0) {
+        // Filter out pitch-black colors to avoid invisible text on black background
+        const activeColors = palette.colors.filter(c => c !== '#000000' && c !== '#08080A' && c !== '#050505');
+        const usableColors = activeColors.length > 0 ? activeColors : palette.colors;
+        const palIdx = Math.min(usableColors.length - 1, Math.floor(luminance * usableColors.length));
+        ctx.fillStyle = usableColors[palIdx];
       } else {
-        ctx.fillStyle = ascii.monochromeColor;
+        // Monochrome terminal (Acid Lime / Amber / Cyan / White) with luminance-weighted brightness
+        ctx.fillStyle = monoColor;
       }
 
       // Edge emphasis brightness boost
@@ -75,11 +87,13 @@ export class AsciiRenderer extends BaseRenderer {
         ctx.fillStyle = '#CCFF00';
       }
 
-      ctx.globalAlpha = Math.min(1, Math.max(0.1, motionOffset.alphaMod));
+      const alphaMod = motionOffset?.alphaMod ?? 1;
+      // Guarantee clear minimum visibility so glyphs are bold and legible
+      ctx.globalAlpha = Math.min(1, Math.max(0.45, (luminance * 0.65 + 0.35) * alphaMod));
       ctx.fillText(
         char,
-        x + width / 2 + motionOffset.dx,
-        y + height / 2 + motionOffset.dy
+        x + width / 2 + (motionOffset?.dx || 0),
+        y + height / 2 + (motionOffset?.dy || 0)
       );
     }
 

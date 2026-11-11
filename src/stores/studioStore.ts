@@ -183,7 +183,7 @@ export const DEFAULT_CONFIG: RenderConfig = {
     lineHeight: 12,
     fontFamily: '"JetBrains Mono", monospace',
     invert: false,
-    colorMode: 'palette',
+    colorMode: 'original',
     monochromeColor: '#CCFF00',
     backgroundColor: '#08080A',
     contrast: 20,

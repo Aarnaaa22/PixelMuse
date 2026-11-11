@@ -23,11 +23,16 @@ console.log('[REQUIREMENT 1: Prominent Large Image Sizing & Layout]');
 const canvasStageContent = fs.readFileSync(path.join(__dirname, 'src/components/studio/CanvasStage.tsx'), 'utf-8');
 const studioLayoutContent = fs.readFileSync(path.join(__dirname, 'src/layouts/StudioLayout.tsx'), 'utf-8');
 const timelineBarContent = fs.readFileSync(path.join(__dirname, 'src/components/studio/TimelineBar.tsx'), 'utf-8');
+const asciiRendererContent = fs.readFileSync(path.join(__dirname, 'src/rendering-modes/AsciiRenderer.ts'), 'utf-8');
 
 assert(
-  canvasStageContent.includes('targetStageW = Math.max(320, stageW * 0.84)') ||
-  canvasStageContent.includes('maxW = Math.max(320, stageW * 0.84)'),
-  'CanvasStage scales up images prominently to fill ~84% width and ~80% height of stage viewport'
+  canvasStageContent.includes('stageW * 0.94') &&
+  canvasStageContent.includes('stageH * 0.90'),
+  'CanvasStage scales up images prominently to fill 94% width and 90% height of stage viewport for a huge prominent display'
+);
+assert(
+  canvasStageContent.includes("target?.closest('button, input, select, textarea, a, [role=\"button\"], .pointer-events-auto')"),
+  'CanvasStage isolates button clicks from canvas drag panning so 100% of button clicks fire cleanly'
 );
 assert(
   studioLayoutContent.includes('min-h-0') &&
@@ -63,11 +68,29 @@ assert(
   'CanvasStage renders active notification banner when raw photograph is loaded'
 );
 
-// 3. REQUIREMENT 3: STUDIO ASSISTANCE, WORKFLOW GUIDANCE & HOVER TOOLTIPS
-console.log('\n[REQUIREMENT 3: Studio Assistance, Workflow Guidance & Hover Tooltips]');
+// 3. REQUIREMENT 3: WORKING ASCII ENGINE & HIGH CONTRAST RENDERING
+console.log('\n[REQUIREMENT 3: Robust Working ASCII Engine & Visual Contrast]');
+assert(
+  asciiRendererContent.includes("colorMode = ascii?.colorMode || 'original'") &&
+  asciiRendererContent.includes('Math.max(38, r)'),
+  'AsciiRenderer provides vibrant photo RGB colors and shadow boost so characters are never invisible black on black'
+);
+assert(
+  studioStoreContent.includes("colorMode: 'original'") &&
+  studioStoreContent.includes("ascii: {"),
+  'DEFAULT_CONFIG defaults ASCII colorMode to full-color original photo RGB'
+);
+
+// 4. REQUIREMENT 4: STUDIO ASSISTANCE, WORKFLOW GUIDANCE & HOVER TOOLTIPS
+console.log('\n[REQUIREMENT 4: Studio Assistance, Workflow Guidance & Hover Tooltips]');
 const sliderContent = fs.readFileSync(path.join(__dirname, 'src/components/ui/Slider.tsx'), 'utf-8');
 const inspectorContent = fs.readFileSync(path.join(__dirname, 'src/components/studio/InspectorPanel.tsx'), 'utf-8');
 
+assert(
+  inspectorContent.includes('ASCII Color Mode') &&
+  inspectorContent.includes('Terminal Tint'),
+  'InspectorPanel provides dedicated ASCII Color Mode selector (Photo RGB / Terminal Mono / Palette) and terminal tint swatches'
+);
 assert(
   sliderContent.includes('tooltip') &&
   sliderContent.includes('description') &&

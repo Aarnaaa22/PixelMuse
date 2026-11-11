@@ -319,44 +319,119 @@ export const InspectorPanel: React.FC = () => {
             </button>
           </div>
 
-          {/* Mode-Specific Extras */}
+          {/* Mode-Specific Extras: ASCII Engine Controls */}
           {(config.mode === 'ascii' || config.mode === 'matrix-rain' || config.mode === 'hexdump') && (
-            <div className="space-y-2 pt-2 border-t border-obsidian-border">
-              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-                Glyph Ramp (CharSet)
-              </label>
-              <div className="grid grid-cols-2 gap-1.5">
-                {ASCII_GLYPH_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={() => {
-                      updateRenderParams({ charSet: preset.chars });
-                      updateAsciiConfig({ characters: preset.chars });
-                    }}
-                    className={cn(
-                      'p-1.5 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-left truncate',
-                      (config.renderParams.charSet || config.ascii.characters) === preset.chars
-                        ? 'border-acid-lime text-white bg-obsidian-950'
-                        : 'border-obsidian-border text-obsidian-muted hover:text-white'
-                    )}
-                  >
-                    {preset.name}
-                  </button>
-                ))}
+            <div className="space-y-3 pt-2 border-t border-obsidian-border">
+              {/* ASCII Color Mode Selector */}
+              <div className="space-y-1.5">
+                <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                  ASCII Color Mode
+                </label>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: 'original', label: 'Photo RGB' },
+                    { id: 'monochrome', label: 'Terminal Mono' },
+                    { id: 'palette', label: 'Palette' },
+                  ].map((cm) => (
+                    <button
+                      key={cm.id}
+                      onClick={() => updateAsciiConfig({ colorMode: cm.id as any })}
+                      className={cn(
+                        'py-1 px-1.5 font-mono text-[9.5px] uppercase tracking-wider rounded-xs border text-center transition-colors cursor-pointer',
+                        (config.ascii.colorMode || 'original') === cm.id
+                          ? 'border-acid-lime bg-acid-lime/20 text-acid-lime font-bold'
+                          : 'border-obsidian-border text-obsidian-muted hover:text-white bg-obsidian-950'
+                      )}
+                    >
+                      {cm.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="pt-1.5">
-                <input
-                  type="text"
-                  value={config.renderParams.charSet || config.ascii.characters}
-                  onChange={(e) => {
-                    updateRenderParams({ charSet: e.target.value });
-                    updateAsciiConfig({ characters: e.target.value });
-                  }}
-                  className="w-full bg-obsidian-950 border border-obsidian-border px-2.5 py-1 font-mono text-xs text-acid-lime focus:outline-none focus:border-acid-lime rounded-xs"
-                  placeholder="Custom characters..."
-                />
+              {/* Terminal Color Swatches (if monochrome active) */}
+              {config.ascii.colorMode === 'monochrome' && (
+                <div className="space-y-1.5">
+                  <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                    Terminal Tint
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { name: 'Acid Lime', color: '#CCFF00' },
+                      { name: 'Phosphor Green', color: '#33E533' },
+                      { name: 'Cathode Amber', color: '#FFB833' },
+                      { name: 'Cyber Cyan', color: '#00F0FF' },
+                      { name: 'Matrix Violet', color: '#9D4EDD' },
+                      { name: 'Paper White', color: '#FFFFFF' },
+                    ].map((sw) => (
+                      <button
+                        key={sw.color}
+                        onClick={() => updateAsciiConfig({ monochromeColor: sw.color })}
+                        title={sw.name}
+                        className={cn(
+                          'w-6 h-6 rounded-xs border transition-all cursor-pointer flex-shrink-0',
+                          config.ascii.monochromeColor === sw.color
+                            ? 'border-white scale-110 shadow-lg'
+                            : 'border-obsidian-border hover:scale-105'
+                        )}
+                        style={{ backgroundColor: sw.color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Glyph Ramp (CharSet) */}
+              <div className="space-y-1.5">
+                <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                  Glyph Ramp (CharSet)
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {ASCII_GLYPH_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => {
+                        updateRenderParams({ charSet: preset.chars });
+                        updateAsciiConfig({ characters: preset.chars });
+                      }}
+                      className={cn(
+                        'p-1.5 text-[10px] font-mono uppercase tracking-wider rounded-xs border text-left truncate transition-colors cursor-pointer',
+                        (config.renderParams.charSet || config.ascii.characters) === preset.chars
+                          ? 'border-acid-lime text-white bg-obsidian-950 font-semibold shadow-[0_0_8px_rgba(204,255,0,0.2)]'
+                          : 'border-obsidian-border text-obsidian-muted hover:text-white bg-obsidian-950'
+                      )}
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={config.renderParams.charSet || config.ascii.characters}
+                    onChange={(e) => {
+                      updateRenderParams({ charSet: e.target.value });
+                      updateAsciiConfig({ characters: e.target.value });
+                    }}
+                    className="w-full bg-obsidian-950 border border-obsidian-border px-2.5 py-1 font-mono text-xs text-acid-lime focus:outline-none focus:border-acid-lime rounded-xs"
+                    placeholder="Custom character set..."
+                  />
+                </div>
               </div>
+
+              {/* ASCII Glow Slider */}
+              <Slider
+                label="Terminal Bloom Glow"
+                value={config.ascii.glow || 0}
+                min={0}
+                max={25}
+                step={1}
+                unit="px"
+                accentColor="lime"
+                description="Adds luminescent CRT terminal glow to ASCII characters."
+                onChange={(val) => updateAsciiConfig({ glow: val })}
+              />
             </div>
           )}
 

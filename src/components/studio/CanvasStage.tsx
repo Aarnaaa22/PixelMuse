@@ -84,10 +84,10 @@ export const CanvasStage: React.FC = () => {
 
   // Calculate contain-style fitting dimensions:
   // Preserves aspect ratio, fits within viewport, never stretched, never cropped, remains centered.
-  // Prominently scales up small photographs to fill ~84% width and ~80% height so the user does not have to squint.
+  // Prominently scales up photographs to fill 94% width and 90% height so the image is BIG, clear, and prominent!
   const fitDimensions = useMemo(() => {
-    const stageW = viewportSize.width > 0 ? viewportSize.width : (typeof window !== 'undefined' ? window.innerWidth - 640 : 800);
-    const stageH = viewportSize.height > 0 ? viewportSize.height : (typeof window !== 'undefined' ? window.innerHeight - 150 : 600);
+    const stageW = viewportSize.width > 0 ? viewportSize.width : (typeof window !== 'undefined' ? window.innerWidth - 640 : 1000);
+    const stageH = viewportSize.height > 0 ? viewportSize.height : (typeof window !== 'undefined' ? window.innerHeight - 140 : 800);
 
     const srcW =
       (sourceImage && 'naturalWidth' in sourceImage ? sourceImage.naturalWidth : (sourceImage as any)?.width) ||
@@ -98,12 +98,12 @@ export const CanvasStage: React.FC = () => {
       imageMetadata?.height ||
       640;
 
-    if (srcW <= 0 || srcH <= 0) return { width: 640, height: 640 };
+    if (srcW <= 0 || srcH <= 0) return { width: 700, height: 700 };
 
     const aspect = srcW / srcH;
-    // Scale image up to comfortably and prominently fill the viewport
-    const maxW = Math.max(320, stageW * 0.84);
-    const maxH = Math.max(320, stageH * 0.80);
+    // Scale image up to fill 94% of stage width and 90% of stage height
+    const maxW = Math.max(500, stageW * 0.94);
+    const maxH = Math.max(480, stageH * 0.90);
 
     let w = maxW;
     let h = maxW / aspect;
@@ -125,6 +125,12 @@ export const CanvasStage: React.FC = () => {
   }, [sourceImage]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // CRITICAL: Do NOT start canvas panning if clicking any button, input, select, or toolbar!
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('button, input, select, textarea, a, [role="button"], .pointer-events-auto')) {
+      return;
+    }
+
     if (e.button === 0 || e.button === 1 || e.altKey) {
       setIsPanning(true);
       setDragStart({ x: e.clientX - panX, y: e.clientY - panY });
@@ -332,9 +338,9 @@ export const CanvasStage: React.FC = () => {
 
           {/* Center: Interactive Workflow & Style Quick-Switcher */}
           {showGuideBar ? (
-            <div className="pointer-events-auto hidden md:flex items-center gap-1.5 bg-obsidian-surface/95 border border-obsidian-border px-2.5 py-1 rounded-xs backdrop-blur-md shadow-xl select-none">
+            <div className="pointer-events-auto flex items-center gap-1.5 bg-obsidian-surface/95 border border-obsidian-border px-2.5 py-1 rounded-xs backdrop-blur-md shadow-xl select-none overflow-x-auto max-w-[65vw]">
               <span
-                className="font-mono text-[9px] uppercase tracking-widest text-obsidian-muted pr-1 flex items-center gap-1"
+                className="font-mono text-[9px] uppercase tracking-widest text-obsidian-muted pr-1 flex items-center gap-1 shrink-0"
                 title="Workflow Step 2: Choose your desired raster transformation"
               >
                 <Sparkles className="w-2.5 h-2.5 text-acid-lime" />
@@ -346,10 +352,13 @@ export const CanvasStage: React.FC = () => {
                 return (
                   <button
                     key={st.id}
-                    onClick={() => setMode(st.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMode(st.id);
+                    }}
                     title={st.hint}
                     className={cn(
-                      'px-2 py-0.5 font-mono text-2xs uppercase tracking-wider rounded-xs border transition-all',
+                      'px-2 py-0.5 font-mono text-2xs uppercase tracking-wider rounded-xs border transition-all shrink-0 cursor-pointer',
                       isActive
                         ? 'border-acid-lime bg-acid-lime/20 text-acid-lime font-bold shadow-[0_0_8px_rgba(204,255,0,0.25)]'
                         : 'border-obsidian-border text-obsidian-muted hover:text-white hover:border-obsidian-border-hover bg-obsidian-950'
@@ -360,21 +369,27 @@ export const CanvasStage: React.FC = () => {
                 );
               })}
 
-              <div className="h-3 w-px bg-obsidian-border mx-1" />
+              <div className="h-3 w-px bg-obsidian-border mx-1 shrink-0" />
 
               <button
-                onClick={() => setShowGuideBar(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowGuideBar(false);
+                }}
                 title="Collapse Assistant Bar"
-                className="p-1 text-obsidian-muted hover:text-white"
+                className="p-1 text-obsidian-muted hover:text-white shrink-0 cursor-pointer"
               >
                 <ChevronUp className="w-3 h-3" />
               </button>
             </div>
           ) : (
             <button
-              onClick={() => setShowGuideBar(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowGuideBar(true);
+              }}
               title="Show Quick Style Assistant"
-              className="pointer-events-auto px-2 py-1 bg-obsidian-surface/90 border border-obsidian-border text-obsidian-muted hover:text-white font-mono text-2xs uppercase rounded-xs backdrop-blur-md flex items-center gap-1"
+              className="pointer-events-auto px-2 py-1 bg-obsidian-surface/90 border border-obsidian-border text-obsidian-muted hover:text-white font-mono text-2xs uppercase rounded-xs backdrop-blur-md flex items-center gap-1 cursor-pointer"
             >
               <Sparkles className="w-3 h-3 text-acid-lime" />
               <span>Quick Styles</span>
