@@ -194,3 +194,4 @@ pixelmuse/
 ## License
 
 MIT License © 2026 PixelMuse Studio. Built for digital artists, creative technologists, and generative design explorers.
+

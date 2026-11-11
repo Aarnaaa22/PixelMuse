@@ -85,49 +85,39 @@ const InteractiveThumbnail: React.FC<InteractiveThumbnailProps> = ({
 
       const elapsed = (now - startTime) / 1000;
 
-      if (isAnimated) {
-        pipeline.execute(source, BUFFER_SIZE, BUFFER_SIZE, preset.config, elapsed);
+      if (isActive) {
+        // Active motion: animate generative raster with dynamic oscillation
+        const activeConfig = {
+          ...preset.config,
+          motion: {
+            ...preset.config.motion,
+            isPlaying: true,
+            animated: true,
+            animSpeed: preset.config.motion?.animSpeed || 1.5,
+            speed: preset.config.motion?.speed || 1.5,
+            animStyle: preset.config.motion?.animStyle || 'wave',
+            type: preset.config.motion?.type || 'wave',
+            animIntensity: 0.85,
+            intensity: 0.85,
+            loop: true,
+          },
+          renderParams: {
+            ...preset.config.renderParams,
+            edgeEmphasis: (preset.config.renderParams?.edgeEmphasis || 30) + Math.round(Math.sin(elapsed * 4) * 12),
+          },
+        };
+        pipeline.execute(source, BUFFER_SIZE, BUFFER_SIZE, activeConfig, elapsed);
         ctx.clearRect(0, 0, BUFFER_SIZE, BUFFER_SIZE);
         ctx.drawImage(offscreen, 0, 0, BUFFER_SIZE, BUFFER_SIZE);
-        if (isActive || isIntersectingRef.current) {
-          rafId = requestAnimationFrame(draw);
-        }
+        rafId = requestAnimationFrame(draw);
       } else {
-        if (isActive) {
-          // Dynamic before/after split scan
-          const sweep = (Math.sin(elapsed * 2.2) + 1) / 2;
-          const splitX = Math.round(sweep * BUFFER_SIZE);
-
-          pipeline.execute(source, BUFFER_SIZE, BUFFER_SIZE, preset.config, elapsed);
+        // Idle state: static presentation (or gentle motion if inherently animated)
+        if (isAnimated) {
+          pipeline.execute(source, BUFFER_SIZE, BUFFER_SIZE, preset.config, elapsed * 0.4);
           ctx.clearRect(0, 0, BUFFER_SIZE, BUFFER_SIZE);
-
-          // Raw Photo slice on left
-          if (splitX > 0) {
-            ctx.drawImage(source, 0, 0, (splitX / BUFFER_SIZE) * source.width, source.height, 0, 0, splitX, BUFFER_SIZE);
-          }
-          // Generative Raster on right
-          if (splitX < BUFFER_SIZE) {
-            ctx.drawImage(offscreen, splitX, 0, BUFFER_SIZE - splitX, BUFFER_SIZE, splitX, 0, BUFFER_SIZE - splitX, BUFFER_SIZE);
-          }
-
-          // Laser divider
-          const glowGrad = ctx.createLinearGradient(splitX - 6, 0, splitX + 6, 0);
-          glowGrad.addColorStop(0, 'rgba(204, 255, 0, 0)');
-          glowGrad.addColorStop(0.5, 'rgba(204, 255, 0, 0.85)');
-          glowGrad.addColorStop(1, 'rgba(204, 255, 0, 0)');
-          ctx.fillStyle = glowGrad;
-          ctx.fillRect(splitX - 6, 0, 12, BUFFER_SIZE);
-
-          ctx.strokeStyle = '#FFFFFF';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(splitX, 0);
-          ctx.lineTo(splitX, BUFFER_SIZE);
-          ctx.stroke();
-
+          ctx.drawImage(offscreen, 0, 0, BUFFER_SIZE, BUFFER_SIZE);
           rafId = requestAnimationFrame(draw);
         } else {
-          // Static render
           pipeline.execute(source, BUFFER_SIZE, BUFFER_SIZE, preset.config, 0);
           ctx.clearRect(0, 0, BUFFER_SIZE, BUFFER_SIZE);
           ctx.drawImage(offscreen, 0, 0, BUFFER_SIZE, BUFFER_SIZE);

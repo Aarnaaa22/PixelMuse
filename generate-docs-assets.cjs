@@ -886,3 +886,4 @@ makeGradientBackgroundPng('03-studio-workspace.png', 204, 255, 0); // Studio lim
 makeGradientBackgroundPng('04-art-library.png', 51, 229, 51); // Green terminal accent
 
 console.log('All screenshot assets successfully created!');
+
