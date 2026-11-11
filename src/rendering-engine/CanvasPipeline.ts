@@ -32,6 +32,14 @@ import {
   OriginalRenderer,
   // Retro / Dither
   DitherRenderer,
+  // New Independent Modules
+  CrtPhosphorRenderer,
+  MetallicRenderer,
+  Wireframe3DRenderer,
+  WaveSurfacesRenderer,
+  AdvancedAsciiRenderer,
+  ProceduralFieldRenderer,
+  GeometricArtifactsRenderer,
 } from '../rendering-modes';
 import { PostProcessingEngine } from '../image-processing/PostProcessingEngine';
 import { BackgroundProcessor } from '../image-processing/BackgroundProcessor';
@@ -67,46 +75,161 @@ export class CanvasPipeline {
     if (!ctx) throw new Error('Failed to initialize offscreen canvas context');
     this.offscreenCtx = ctx;
 
-    // Register all 24 modular render modes
-    // Character Based
-    this.registerRenderer(new AsciiRenderer());
-
-    // Geometric
+    // Primary Modular Render Modes
+    const ascii = new AsciiRenderer();
     const mosaic = new MosaicRenderer();
     const dots = new DotsRenderer();
+    const crosses = new CrossesRenderer();
+    const diamonds = new DiamondsRenderer();
+    const hexagons = new HexagonsRenderer();
+    const triangles = new TrianglesRenderer();
+    const rings = new RingsRenderer();
+    const hearts = new HeartsRenderer();
+    const stars = new StarsRenderer();
+    const bubbles = new BubblesRenderer();
+    const hatch = new HatchRenderer();
+    const contour = new ContourRenderer();
+    const pixel = new PixelRenderer();
+    const halfblocks = new HalfblocksRenderer();
+    const braille = new BrailleRenderer();
+    const diagonalLines = new DiagonalLinesRenderer();
+    const lines = new LinesRenderer();
+    const mixedPatterns = new MixedPatternsRenderer();
+    const voxels = new VoxelsRenderer();
+    const lego = new LegoRenderer();
+    const matrixRain = new MatrixRainRenderer();
+    const hexdump = new HexdumpRenderer();
+    const disco = new DiscoRenderer();
+    const original = new OriginalRenderer();
+    const dither = new DitherRenderer();
+
+    this.registerRenderer(ascii);
+    this.renderers.set('ascii', ascii);
     this.registerRenderer(mosaic);
+    this.renderers.set('mosaic', mosaic);
     this.registerRenderer(dots);
-    this.registerRenderer(new CrossesRenderer());
-    this.registerRenderer(new DiamondsRenderer());
-    this.registerRenderer(new HexagonsRenderer());
-    this.registerRenderer(new TrianglesRenderer());
-    this.registerRenderer(new RingsRenderer());
-    this.registerRenderer(new HeartsRenderer());
-    this.registerRenderer(new StarsRenderer());
-    this.registerRenderer(new BubblesRenderer());
-    this.registerRenderer(new HatchRenderer());
-    this.registerRenderer(new ContourRenderer());
+    this.renderers.set('dots', dots);
+    this.registerRenderer(crosses);
+    this.renderers.set('crosses', crosses);
+    this.registerRenderer(diamonds);
+    this.renderers.set('diamonds', diamonds);
+    this.registerRenderer(hexagons);
+    this.renderers.set('hexagons', hexagons);
+    this.registerRenderer(triangles);
+    this.renderers.set('triangles', triangles);
+    this.registerRenderer(rings);
+    this.renderers.set('rings', rings);
+    this.registerRenderer(hearts);
+    this.renderers.set('hearts', hearts);
+    this.registerRenderer(stars);
+    this.renderers.set('stars', stars);
+    this.registerRenderer(bubbles);
+    this.renderers.set('bubbles', bubbles);
+    this.registerRenderer(hatch);
+    this.renderers.set('hatch', hatch);
+    this.registerRenderer(contour);
+    this.renderers.set('contour', contour);
 
-    // Pixel Based
-    this.registerRenderer(new PixelRenderer());
-    this.registerRenderer(new HalfblocksRenderer());
-    this.registerRenderer(new BrailleRenderer());
+    this.registerRenderer(pixel);
+    this.renderers.set('pixel', pixel);
+    this.registerRenderer(halfblocks);
+    this.renderers.set('halfblocks', halfblocks);
+    this.registerRenderer(braille);
+    this.renderers.set('braille', braille);
 
-    // Pattern Based
-    this.registerRenderer(new DiagonalLinesRenderer());
-    this.registerRenderer(new LinesRenderer());
-    this.registerRenderer(new MixedPatternsRenderer());
-    this.registerRenderer(new VoxelsRenderer());
-    this.registerRenderer(new LegoRenderer());
+    this.registerRenderer(diagonalLines);
+    this.renderers.set('diagonal-lines', diagonalLines);
+    this.registerRenderer(lines);
+    this.renderers.set('lines', lines);
+    this.registerRenderer(mixedPatterns);
+    this.renderers.set('mixed-patterns', mixedPatterns);
+    this.registerRenderer(voxels);
+    this.renderers.set('voxels', voxels);
+    this.registerRenderer(lego);
+    this.renderers.set('lego', lego);
 
-    // Special
-    this.registerRenderer(new MatrixRainRenderer());
-    this.registerRenderer(new HexdumpRenderer());
-    this.registerRenderer(new DiscoRenderer());
-    this.registerRenderer(new OriginalRenderer());
+    this.registerRenderer(matrixRain);
+    this.renderers.set('matrix-rain', matrixRain);
+    this.registerRenderer(hexdump);
+    this.renderers.set('hexdump', hexdump);
+    this.registerRenderer(disco);
+    this.renderers.set('disco', disco);
+    this.registerRenderer(original);
+    this.renderers.set('original', original);
 
-    // Dither & Retro
-    this.registerRenderer(new DitherRenderer());
+    this.registerRenderer(dither);
+    this.renderers.set('dither', dither);
+
+    // CRT, Phosphor & Metallic Modules
+    const crt = new CrtPhosphorRenderer();
+    const metallic = new MetallicRenderer();
+    this.registerRenderer(crt);
+    this.renderers.set('crt-phosphor', crt);
+    this.renderers.set('crt-scan', crt);
+    this.registerRenderer(metallic);
+    this.renderers.set('metallic', metallic);
+
+    // 3D Perspective & Depth Modules
+    const cube3d = new Wireframe3DRenderer('cube');
+    const globe3d = new Wireframe3DRenderer('globe');
+    const knot3d = new Wireframe3DRenderer('knot');
+    const pyramid3d = new Wireframe3DRenderer('pyramid');
+    const torus3d = new Wireframe3DRenderer('torus');
+    const mesh3d = new Wireframe3DRenderer('mesh');
+    this.registerRenderer(cube3d);
+    this.renderers.set('wireframe-3d', cube3d);
+    this.renderers.set('wireframe-cube', cube3d);
+    this.renderers.set('wireframe-globe', globe3d);
+    this.renderers.set('wireframe-knot', knot3d);
+    this.renderers.set('wireframe-pyramid', pyramid3d);
+    this.renderers.set('wireframe-torus', torus3d);
+    this.renderers.set('hero-mesh', mesh3d);
+
+    // Wave & Fluid Modules
+    const waveSurfaces = new WaveSurfacesRenderer('sinusoidal');
+    const schlieren = new WaveSurfacesRenderer('schlieren');
+    const reactionDiff = new WaveSurfacesRenderer('reaction-diffusion');
+    this.registerRenderer(waveSurfaces);
+    this.renderers.set('wave-surfaces', waveSurfaces);
+    this.renderers.set('schlieren', schlieren);
+    this.renderers.set('reaction-diffusion', reactionDiff);
+
+    // Advanced Typography & ASCII Variations
+    const rippleAscii = new AdvancedAsciiRenderer('ripple');
+    const virtAscii = new AdvancedAsciiRenderer('virt');
+    const cityAscii = new AdvancedAsciiRenderer('city');
+    const typoCascade = new AdvancedAsciiRenderer('cascade');
+    this.registerRenderer(rippleAscii);
+    this.renderers.set('ripple-ascii', rippleAscii);
+    this.renderers.set('virt-ascii', virtAscii);
+    this.renderers.set('city-ascii', cityAscii);
+    this.renderers.set('typo-cascade', typoCascade);
+
+    // Procedural Field & Background Modules
+    const tunnelRaymarch = new ProceduralFieldRenderer('tunnel');
+    const particleWake = new ProceduralFieldRenderer('wake');
+    const shimmerBg = new ProceduralFieldRenderer('shimmer');
+    const ditherOrb = new ProceduralFieldRenderer('dither-orb');
+    const polarFlower = new ProceduralFieldRenderer('polar-flower');
+    this.registerRenderer(tunnelRaymarch);
+    this.renderers.set('tunnel-raymarch', tunnelRaymarch);
+    this.renderers.set('particle-wake', particleWake);
+    this.renderers.set('shimmer-bg', shimmerBg);
+    this.renderers.set('dither-orb', ditherOrb);
+    this.renderers.set('polar-flower', polarFlower);
+
+    // Geometric Artifacts & Dither Hybrids
+    const cruciform = new GeometricArtifactsRenderer('cruciform');
+    const crossStitch = new GeometricArtifactsRenderer('cross-stitch');
+    const linocutRings = new GeometricArtifactsRenderer('linocut-rings');
+    const constellation = new GeometricArtifactsRenderer('constellation');
+    const ditherFlicker = new GeometricArtifactsRenderer('dither-flicker');
+    this.registerRenderer(cruciform);
+    this.renderers.set('cruciform', cruciform);
+    this.renderers.set('cross-stitch', crossStitch);
+    this.renderers.set('linocut-rings', linocutRings);
+    this.renderers.set('constellation', constellation);
+    this.renderers.set('dither-flicker', ditherFlicker);
 
     // Aliases for compatibility
     this.renderers.set('pixel-mosaic', mosaic);

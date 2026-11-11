@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { CommunityRecipe } from '../../types/recipe';
 import { CanvasPipeline } from '../../rendering-engine';
 import { createSamplePhotoCanvas } from '../../utilities/samplePhotos';
@@ -27,60 +27,58 @@ export const RecipeCanvasPreview: React.FC<RecipeCanvasPreviewProps> = ({
   const animFrameRef = useRef<number | null>(null);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Cached sample photo canvas
+  const sampleCanvas = useMemo(() => {
+    return createSamplePhotoCanvas('marble-sculpture');
+  }, []);
+
   // Merge recipe config with DEFAULT_CONFIG to guarantee all fields exist
-  const mergedConfig: RenderConfig = {
-    ...DEFAULT_CONFIG,
-    ...recipe.config,
-    renderParams: {
-      ...DEFAULT_CONFIG.renderParams,
-      ...(recipe.config.renderParams || {}),
-    },
-    color: {
-      ...DEFAULT_CONFIG.color,
-      ...(recipe.config.color || {}),
-    },
-    effects: {
-      ...DEFAULT_CONFIG.effects,
-      ...(recipe.config.effects || {}),
-    },
-    motion: {
-      ...DEFAULT_CONFIG.motion,
-      ...(recipe.config.motion || {}),
-    },
-    ascii: {
-      ...DEFAULT_CONFIG.ascii,
-      ...(recipe.config.ascii || {}),
-    },
-    dither: {
-      ...DEFAULT_CONFIG.dither,
-      ...(recipe.config.dither || {}),
-    },
-  };
+  const mergedConfig: RenderConfig = useMemo(() => {
+    const rawConfig = recipe.defaultConfig || recipe.config || {};
+    return {
+      ...DEFAULT_CONFIG,
+      ...rawConfig,
+      renderParams: {
+        ...DEFAULT_CONFIG.renderParams,
+        ...(rawConfig.renderParams || {}),
+      },
+      color: {
+        ...DEFAULT_CONFIG.color,
+        ...(rawConfig.color || {}),
+      },
+      effects: {
+        ...DEFAULT_CONFIG.effects,
+        ...(rawConfig.effects || {}),
+      },
+      motion: {
+        ...DEFAULT_CONFIG.motion,
+        ...(rawConfig.motion || {}),
+      },
+      ascii: {
+        ...DEFAULT_CONFIG.ascii,
+        ...(rawConfig.ascii || {}),
+      },
+      dither: {
+        ...DEFAULT_CONFIG.dither,
+        ...(rawConfig.dither || {}),
+      },
+    };
+  }, [recipe]);
 
   const renderFrame = useCallback(
     (timeSec: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      if (recipe.type === 'background' || recipe.proceduralType) {
-        if (!proceduralEngineRef.current) {
-          proceduralEngineRef.current = new ProceduralBackgroundEngine();
-          proceduralEngineRef.current.attach(canvas);
-        }
-        const pType = recipe.proceduralType || 'hero-mesh';
-        const shouldAnimate = interactive || isHovered;
-        proceduralEngineRef.current.render(pType, shouldAnimate);
-      } else {
-        // Photographic transformation on shared sample sculpture
-        if (!pipelineRef.current) {
-          pipelineRef.current = new CanvasPipeline();
-        }
-        pipelineRef.current.attach(canvas);
-        const sample = createSamplePhotoCanvas('marble-sculpture');
-        pipelineRef.current.execute(sample, width, height, mergedConfig, timeSec);
+      if (!pipelineRef.current) {
+        pipelineRef.current = new CanvasPipeline();
       }
+      pipelineRef.current.attach(canvas);
+
+      // Execute via CanvasPipeline with optimized thumbnail resolution
+      pipelineRef.current.execute(sampleCanvas, width, height, mergedConfig, timeSec);
     },
-    [recipe, interactive, isHovered, width, height]
+    [sampleCanvas, mergedConfig, width, height]
   );
 
   useEffect(() => {
@@ -90,12 +88,13 @@ export const RecipeCanvasPreview: React.FC<RecipeCanvasPreviewProps> = ({
     // Render initial static frame
     renderFrame(0);
 
-    const shouldAnimate = (interactive || isHovered) && recipe.isAnimated;
+    const isAnim = recipe.animationMetadata?.isAnimated ?? recipe.isAnimated;
+    const shouldAnimate = (interactive || isHovered) && isAnim;
 
     if (shouldAnimate) {
-      let start = performance.now();
+      const startTime = performance.now();
       const loop = (now: number) => {
-        const timeSec = (now - start) / 1000;
+        const timeSec = (now - startTime) / 1000;
         renderFrame(timeSec);
         animFrameRef.current = requestAnimationFrame(loop);
       };
@@ -110,7 +109,7 @@ export const RecipeCanvasPreview: React.FC<RecipeCanvasPreviewProps> = ({
       pipelineRef.current?.detach();
       proceduralEngineRef.current?.detach();
     };
-  }, [renderFrame, interactive, isHovered, recipe.isAnimated]);
+  }, [renderFrame, interactive, isHovered, recipe]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!proceduralEngineRef.current || !canvasRef.current) return;

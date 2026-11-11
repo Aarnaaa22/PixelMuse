@@ -2,6 +2,7 @@ export * from './BaseRenderer';
 
 // Character Based
 export * from './AsciiRenderer';
+export * from './AdvancedAsciiRenderer';
 
 // Geometric
 export * from './MosaicRenderer';
@@ -16,6 +17,7 @@ export * from './StarsRenderer';
 export * from './BubblesRenderer';
 export * from './HatchRenderer';
 export * from './ContourRenderer';
+export * from './GeometricArtifactsRenderer';
 
 // Pixel Based
 export * from './PixelRenderer';
@@ -28,6 +30,19 @@ export * from './LinesRenderer';
 export * from './MixedPatternsRenderer';
 export * from './VoxelsRenderer';
 export * from './LegoRenderer';
+
+// CRT, Phosphor & Metallic
+export * from './CrtPhosphorRenderer';
+export * from './MetallicRenderer';
+
+// 3D Perspective & Depth
+export * from './Wireframe3DRenderer';
+
+// Waves & Fluids
+export * from './WaveSurfacesRenderer';
+
+// Procedural Fields & Backgrounds
+export * from './ProceduralFieldRenderer';
 
 // Special
 export * from './MatrixRainRenderer';

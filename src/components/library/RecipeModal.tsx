@@ -34,10 +34,11 @@ export const RecipeModal: React.FC = () => {
   const favorite = isFavorite(recipe.id);
 
   const handleOpenInStudio = async () => {
-    if (recipe.config.mode) {
-      setMode(recipe.config.mode);
+    const conf = recipe.defaultConfig || recipe.config;
+    if (conf.mode) {
+      setMode(conf.mode);
     }
-    updateConfig(recipe.config);
+    updateConfig(conf);
     setProjectName(recipe.name.toUpperCase().replace(/\s+/g, '_'));
 
     if (!sourceImage) {
@@ -165,7 +166,7 @@ export const RecipeModal: React.FC = () => {
                 </div>
                 <p>
                   {recipe.supported
-                    ? `This recipe maps 100% to PixelMuse's native modular renderer [${recipe.config.mode}]. Applying it will execute instantly in Studio with full parameter controls.`
+                    ? `This recipe maps 100% to PixelMuse's native modular renderer [${recipe.renderingModule} / ${recipe.config.mode}]. Applying it will execute instantly in Studio with full parameter controls.`
                     : recipe.missingFeatureNote ||
                       'Requires specialized WebGL or mathematical projection shaders identified in the PixelMuse engine roadmap.'}
                 </p>

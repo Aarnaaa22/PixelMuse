@@ -1,19 +1,28 @@
 export type RenderMode = 
   // Character Based
   | 'ascii'
+  | 'ripple-ascii'
+  | 'virt-ascii'
+  | 'city-ascii'
+  | 'typo-cascade'
   // Geometric
   | 'mosaic'
   | 'dots'
   | 'crosses'
+  | 'cruciform'
+  | 'cross-stitch'
   | 'diamonds'
   | 'hexagons'
   | 'triangles'
   | 'rings'
+  | 'linocut-rings'
   | 'hearts'
   | 'stars'
+  | 'constellation'
   | 'bubbles'
   | 'hatch'
   | 'contour'
+  | 'metallic'
   // Pixel Based
   | 'pixel'
   | 'halfblocks'
@@ -24,6 +33,28 @@ export type RenderMode =
   | 'mixed-patterns'
   | 'voxels'
   | 'lego'
+  // CRT & Retro
+  | 'crt-phosphor'
+  | 'crt-scan'
+  | 'dither-flicker'
+  // 3D Perspective & Depth
+  | 'wireframe-3d'
+  | 'wireframe-cube'
+  | 'wireframe-globe'
+  | 'wireframe-knot'
+  | 'wireframe-pyramid'
+  | 'wireframe-torus'
+  | 'hero-mesh'
+  // Wave & Fluids
+  | 'wave-surfaces'
+  | 'schlieren'
+  | 'reaction-diffusion'
+  // Procedural Backgrounds & Particles
+  | 'tunnel-raymarch'
+  | 'particle-wake'
+  | 'shimmer-bg'
+  | 'dither-orb'
+  | 'polar-flower'
   // Special
   | 'matrix-rain'
   | 'hexdump'
@@ -35,7 +66,8 @@ export type RenderMode =
   | 'pixel-mosaic'
   | 'halftone'
   | 'matrix'
-  | 'crt-scan';
+  | 'raw'
+  | 'passthrough';
 
 export type DitherAlgorithm = 
   | 'floyd-steinberg'

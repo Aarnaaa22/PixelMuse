@@ -22,10 +22,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     e.stopPropagation();
 
     // Apply configuration
-    if (recipe.config.mode) {
-      setMode(recipe.config.mode);
+    const conf = recipe.defaultConfig || recipe.config;
+    if (conf.mode) {
+      setMode(conf.mode);
     }
-    updateConfig(recipe.config);
+    updateConfig(conf);
     setProjectName(recipe.name.toUpperCase().replace(/\s+/g, '_'));
 
     // If no image is currently loaded in studio, supply the shared sculpture sample

@@ -1,30 +1,34 @@
-import { CommunityRecipe } from '../types/recipe';
+import { CentralRecipe } from '../types/recipe';
 
 /**
- * Complete inventory of 48 community generative ASCII & canvas recipes
- * curated from https://21st.dev/community/ascii.
+ * Central Recipe Registry for PixelMuse Generative Rendering Engine.
+ * Contains all 48 cataloged community recipes with individual configurations,
+ * independent rendering module mappings, parameter definitions, and animation metadata.
  */
-
-export const COMMUNITY_RECIPES: CommunityRecipe[] = [
+export const COMMUNITY_RECIPES: CentralRecipe[] = [
   // 01: Hero ASCII One
   {
     id: 'recipe-01-hero-ascii-one',
     name: 'Hero ASCII One',
     creator: '@larsen66',
-    description: 'Rotating 3D character mesh with mouse parallax and perspective distortion matrix.',
+    description: 'Rotating 3D character mesh with mouse parallax and vanishing point perspective distortion.',
     category: 'animated-bg',
     tags: ['3D', 'Wireframe', 'Hero', 'Perspective'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires a real-time 3D rotation projection matrix and Euler vertex transform pipeline (Feature Set A).',
-    keyParameters: ['fov', 'speed', 'glyphSet', 'colorMode', 'dpr'],
-    proceduralType: 'hero-mesh',
-    config: {
-      mode: 'matrix-rain',
-      renderParams: { cellSize: 10, density: 1.2, coverage: 90, invert: false, edgeEmphasis: 0, charSet: ' .:-=+*#%@' },
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['fov', 'speed', 'glyphSet', 'colorMode', 'cellSize', 'density'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.2, loop: true, interactive: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'hero-mesh',
+      renderParams: { cellSize: 10, density: 1.2, coverage: 90, invert: false, edgeEmphasis: 0.3, charSet: ' .:-=+*#%@' },
+      color: { brightness: 0, contrast: 20, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.7, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.2, animSpeed: 1.2, type: 'wave', animStyle: 'wave', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 1 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 02: Hero ASCII Tunnel
@@ -36,16 +40,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Tunnel', 'Raymarch', 'Vector', 'Interactive'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires vanishing-point perspective raymarched tunnel solver and camera pitch tracking (Feature Set B).',
-    keyParameters: ['speed', 'ringCount', 'tiltSensitivity', 'glyphDensity'],
-    proceduralType: 'tunnel',
-    config: {
-      mode: 'rings',
+    renderingModule: 'ProceduralFieldRenderer',
+    supported: true,
+    supportedParameters: ['speed', 'ringCount', 'tiltSensitivity', 'glyphDensity', 'tintColor'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 1.5, loop: true, interactive: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'tunnel-raymarch',
       renderParams: { cellSize: 12, density: 1.4, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: '01#*+:=~-' },
+      color: { brightness: 10, contrast: 25, saturation: 1.4, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.85, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.5, animSpeed: 1.5, type: 'pulse', animStyle: 'pulse', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 03: Background ASCII Wake
@@ -57,16 +65,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Particles', 'Wake', 'Interactive', 'Trail'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires dynamic mouse coordinate particle buffer with exponential decay trail calculation (Feature Set B).',
-    keyParameters: ['decayRate', 'radius', 'scrambleEntropy', 'baseOpacity'],
-    proceduralType: 'wake',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'ProceduralFieldRenderer',
+    supported: true,
+    supportedParameters: ['decayRate', 'radius', 'scrambleEntropy', 'baseOpacity', 'cellSize'],
+    animationMetadata: { isAnimated: true, type: 'shimmer', defaultSpeed: 1.0, loop: true, interactive: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'particle-wake',
       renderParams: { cellSize: 12, density: 1.0, coverage: 85, invert: false, edgeEmphasis: 0, charSet: '.:*+=#%@' },
+      color: { brightness: 0, contrast: 20, saturation: 1.2, grayscale: false, tintColor: '#9D4EDD', tintOpacity: 0.7, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.0, animSpeed: 1.0, type: 'shimmer', animStyle: 'shimmer', intensity: 0.7, animIntensity: 0.7, loop: true, frequency: 1.5 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 04: Hero ASCII Schlieren
@@ -78,16 +90,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Physics', 'Shockwave', 'Fluid', 'Optical'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires fluid-dynamics Navier-Stokes velocity vector grid solver (Feature Set C).',
-    keyParameters: ['flowVelocity', 'shockIntensity', 'refractionIndex', 'gridStep'],
-    proceduralType: 'schlieren',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'WaveSurfacesRenderer',
+    supported: true,
+    supportedParameters: ['flowVelocity', 'shockIntensity', 'refractionIndex', 'gridStep', 'cellSize'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.8, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'schlieren',
       renderParams: { cellSize: 10, density: 1.5, coverage: 95, invert: false, edgeEmphasis: 0.8, charSet: ' .:|/\\#' },
+      color: { brightness: 0, contrast: 30, saturation: 1.3, grayscale: false, tintColor: '#9D4EDD', tintOpacity: 0.8, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.8, animSpeed: 1.8, type: 'wave', animStyle: 'wave', intensity: 0.85, animIntensity: 0.85, loop: true, frequency: 2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 05: Hero ASCII Reaction Front
@@ -99,16 +115,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Reaction-Diffusion', 'Gray-Scott', 'Generative', 'Organic'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires Gray-Scott partial differential equation (PDE) 2-buffer simulation texture solver (Feature Set C).',
-    keyParameters: ['feedRate', 'killRate', 'diffusionU', 'diffusionV', 'palette'],
-    proceduralType: 'reaction-front',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'WaveSurfacesRenderer',
+    supported: true,
+    supportedParameters: ['feedRate', 'killRate', 'diffusionU', 'diffusionV', 'palette', 'cellSize'],
+    animationMetadata: { isAnimated: true, type: 'ripple', defaultSpeed: 1.0, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'reaction-diffusion',
       renderParams: { cellSize: 10, density: 1.3, coverage: 90, invert: false, edgeEmphasis: 0.4, charSet: ' -~=+%#@' },
+      color: { brightness: 5, contrast: 25, saturation: 1.4, grayscale: false, tintColor: '#FF473A', tintOpacity: 0.75, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.0, animSpeed: 1.0, type: 'ripple', animStyle: 'ripple', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 1 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 06: ASCII Background
@@ -120,15 +140,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Ambient', 'Pulse', 'Monospace', 'Minimal'],
     type: 'background',
-    isAnimated: true,
+    renderingModule: 'ProceduralFieldRenderer',
     supported: true,
-    keyParameters: ['pulseSpeed', 'luminanceAmplitude', 'cellSize', 'invert'],
-    proceduralType: 'wake',
-    config: {
-      mode: 'ascii',
+    supportedParameters: ['pulseSpeed', 'luminanceAmplitude', 'cellSize', 'invert', 'tintColor'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 0.8, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'shimmer-bg',
       renderParams: { cellSize: 14, density: 1.0, coverage: 80, invert: false, edgeEmphasis: 0, charSet: ' .:-=+*#' },
+      color: { brightness: 0, contrast: 20, saturation: 1.0, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.6, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 0.8, animSpeed: 0.8, type: 'pulse', animStyle: 'pulse', intensity: 0.6, animIntensity: 0.6, loop: true, frequency: 1.2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 07: Violet ASCII Wave
@@ -140,17 +165,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['Sinusoidal', 'Violet', 'Ribbons', '3D Wave'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires continuous 3D sine ribbon parametric surface generator (Feature Set A/C).',
-    keyParameters: ['frequency', 'waveCount', 'amplitude', 'colorGradient'],
-    proceduralType: 'wave',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'WaveSurfacesRenderer',
+    supported: true,
+    supportedParameters: ['frequency', 'waveCount', 'amplitude', 'colorGradient', 'cellSize'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.2, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wave-surfaces',
       renderParams: { cellSize: 12, density: 1.1, coverage: 85, invert: false, edgeEmphasis: 0.2, charSet: '~-+=*#' },
       color: { brightness: 10, contrast: 25, saturation: 1.4, grayscale: false, tintColor: '#9D4EDD', tintOpacity: 0.8, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.2, animSpeed: 1.2, type: 'wave', animStyle: 'wave', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 1.8 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 08: ASCII Globe Spin
@@ -162,16 +190,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'animated-bg',
     tags: ['3D', 'Globe', 'Sphere', 'Orthographic'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires 3D spherical trigonometry projection pipeline with orthographic back-face culling (Feature Set A).',
-    keyParameters: ['radius', 'rotationSpeed', 'tiltAngle', 'dragInertia', 'lineDensity'],
-    proceduralType: 'globe3d',
-    config: {
-      mode: 'rings',
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['radius', 'rotationSpeed', 'tiltAngle', 'dragInertia', 'lineDensity'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 1.0, loop: true, interactive: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wireframe-globe',
       renderParams: { cellSize: 10, density: 1.5, coverage: 95, invert: false, edgeEmphasis: 0.5, charSet: 'o.+*' },
+      color: { brightness: 0, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#4ADE80', tintOpacity: 0.8, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.0, animSpeed: 1.0, type: 'pulse', animStyle: 'pulse', intensity: 0.7, animIntensity: 0.7, loop: true, frequency: 1 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 09: ASCII Cube
@@ -183,16 +215,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['3D', 'Polyhedral', 'Cube', 'Wireframe'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires 3D vertex transform and polyhedral face rasterization pipeline (Feature Set A).',
-    keyParameters: ['size', 'rotSpeedX', 'rotSpeedY', 'perspective', 'edgeGlyphs'],
-    proceduralType: 'cube3d',
-    config: {
-      mode: 'voxels',
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['size', 'rotSpeedX', 'rotSpeedY', 'perspective', 'edgeGlyphs'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.1, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wireframe-cube',
       renderParams: { cellSize: 12, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.6, charSet: '+-|' },
+      color: { brightness: 0, contrast: 30, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.85, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.1, animSpeed: 1.1, type: 'wave', animStyle: 'wave', intensity: 0.75, animIntensity: 0.75, loop: true, frequency: 1.4 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 10: ASCII Knot
@@ -204,16 +240,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['3D', 'Trefoil', 'Parametric', 'Mathematical'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires parametric space-curve equation generator: x=sin(u)+2sin(2u), y=cos(u)-2cos(2u), z=-sin(3u) (Feature Set A).',
-    keyParameters: ['tubeRadius', 'knotScale', 'segments', 'depthShade'],
-    proceduralType: 'knot3d',
-    config: {
-      mode: 'contour',
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['tubeRadius', 'knotScale', 'segments', 'depthShade'],
+    animationMetadata: { isAnimated: true, type: 'ripple', defaultSpeed: 1.0, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wireframe-knot',
       renderParams: { cellSize: 10, density: 1.3, coverage: 90, invert: false, edgeEmphasis: 0.7, charSet: '*#@+' },
+      color: { brightness: 5, contrast: 30, saturation: 1.4, grayscale: false, tintColor: '#FF473A', tintOpacity: 0.8, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.0, animSpeed: 1.0, type: 'ripple', animStyle: 'ripple', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 1.2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 11: ASCII Pyramid
@@ -225,16 +265,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['3D', 'Pyramid', 'Apex', 'Wireframe'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires 3D wireframe rasterizer with perspective apex projection (Feature Set A).',
-    keyParameters: ['height', 'baseWidth', 'rotationSpeed', 'fillDensity'],
-    proceduralType: 'pyramid3d',
-    config: {
-      mode: 'triangles',
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['height', 'baseWidth', 'rotationSpeed', 'fillDensity'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.2, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wireframe-pyramid',
       renderParams: { cellSize: 12, density: 1.2, coverage: 95, invert: false, edgeEmphasis: 0.5, charSet: '^/\\' },
+      color: { brightness: 0, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.85, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.2, animSpeed: 1.2, type: 'wave', animStyle: 'wave', intensity: 0.7, animIntensity: 0.7, loop: true, frequency: 1.5 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 12: ASCII Renderer (Torus)
@@ -246,16 +290,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['WebGL', 'Torus', '3D Mesh', 'Canvas'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires offscreen WebGL-to-Canvas character luminance sampling pipeline (Feature Set A).',
-    keyParameters: ['geometry', 'lightingAmbient', 'charRamp', 'renderScale'],
-    proceduralType: 'torus-wire',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'Wireframe3DRenderer',
+    supported: true,
+    supportedParameters: ['geometry', 'lightingAmbient', 'charRamp', 'renderScale'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.0, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'wireframe-torus',
       renderParams: { cellSize: 10, density: 1.4, coverage: 95, invert: false, edgeEmphasis: 0.6, charSet: ' .:-=+*#%@' },
+      color: { brightness: 0, contrast: 30, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.75, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.0, animSpeed: 1.0, type: 'wave', animStyle: 'wave', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 1 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 13: ASCII Flower
@@ -267,17 +315,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'abstract',
     tags: ['Polar', 'Floral', 'Mathematical', 'Rose Curve'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires polar coordinate mathematical curve rasterizer: r = cos(k*theta) (Feature Set A).',
-    keyParameters: ['petals', 'polarResolution', 'spinSpeed', 'colorTint'],
-    proceduralType: 'flower-polar',
-    config: {
-      mode: 'stars',
+    renderingModule: 'ProceduralFieldRenderer',
+    supported: true,
+    supportedParameters: ['petals', 'polarResolution', 'spinSpeed', 'colorTint'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 0.7, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'polar-flower',
       renderParams: { cellSize: 12, density: 1.3, coverage: 85, invert: false, edgeEmphasis: 0.4, charSet: '*~.' },
-      color: { brightness: 0, contrast: 20, saturation: 1.3, grayscale: false, tintColor: '#FF473A', tintOpacity: 0.7, blendMode: 'screen' },
+      color: { brightness: 0, contrast: 20, saturation: 1.3, grayscale: false, tintColor: '#FF473A', tintOpacity: 0.75, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 0.7, animSpeed: 0.7, type: 'pulse', animStyle: 'pulse', intensity: 0.65, animIntensity: 0.65, loop: true, frequency: 1 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 14: Text ASCII Cascade
@@ -289,16 +340,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Typography', 'Dissolve', 'Editorial', 'Interactive'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires DOM text-splitting glyph physics canvas dissipation engine (Feature Set B).',
-    keyParameters: ['dissolveDuration', 'glyphEntropy', 'triggerThreshold'],
-    proceduralType: 'text-cascade',
-    config: {
-      mode: 'ascii',
+    renderingModule: 'AdvancedAsciiRenderer',
+    supported: true,
+    supportedParameters: ['dissolveDuration', 'glyphEntropy', 'triggerThreshold'],
+    animationMetadata: { isAnimated: true, type: 'flicker', defaultSpeed: 1.4, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'typo-cascade',
       renderParams: { cellSize: 12, density: 1.2, coverage: 90, invert: false, edgeEmphasis: 0.5, charSet: '#%*+=:-.' },
+      color: { brightness: 0, contrast: 25, saturation: 1.1, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.7, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.4, animSpeed: 1.4, type: 'flicker', animStyle: 'flicker', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 15: dither
@@ -310,15 +365,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['1-Bit', 'Macintosh', 'Error Diffusion', 'Retro'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'DitherRenderer',
     supported: true,
-    keyParameters: ['algorithm', 'threshold', 'cellSize', 'contrastBoost'],
-    config: {
+    supportedParameters: ['algorithm', 'threshold', 'cellSize', 'contrastBoost'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'dither',
       renderParams: { cellSize: 6, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.4, charSet: ' .:-=+*#%@' },
       dither: { algorithm: 'atkinson', scale: 2, threshold: 0.5, colorDepth: 2, paletteId: 'noir-monochrome', serpentine: true },
       color: { brightness: 0, contrast: 35, saturation: 0, grayscale: true, tintColor: '#FFFFFF', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 16: 11
@@ -330,16 +390,21 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['Flicker', 'Chroma', 'Kinetic', 'Dither Hybrid'],
     type: 'photo',
-    isAnimated: true,
+    renderingModule: 'GeometricArtifactsRenderer',
     supported: true,
-    keyParameters: ['flickerHz', 'noiseThreshold', 'animIntensity', 'ditherAlgo'],
-    config: {
-      mode: 'dither',
+    supportedParameters: ['flickerHz', 'noiseThreshold', 'animIntensity', 'ditherAlgo'],
+    animationMetadata: { isAnimated: true, type: 'flicker', defaultSpeed: 2.2, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'dither-flicker',
       renderParams: { cellSize: 8, density: 1.1, coverage: 95, invert: false, edgeEmphasis: 0.3, charSet: '01' },
       dither: { algorithm: 'bayer-8x8', scale: 2, threshold: 0.45, colorDepth: 4, paletteId: 'cyberpunk-editorial', serpentine: true },
       motion: { isPlaying: true, animated: true, speed: 2.2, animSpeed: 2.2, type: 'flicker', animStyle: 'flicker', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 3 },
       effects: { glitch: 0.35, chromaticAberration: 0.4, bloom: 0.2, vignette: 0.3, scanlines: 0.4, filmGrain: 0.2, halftone: 0, pixelation: 0, filmDust: 0 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 17: ı ASCII
@@ -351,14 +416,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Ripple', 'Displacement', 'Kinetic', 'Linguistic'],
     type: 'photo',
-    isAnimated: true,
+    renderingModule: 'AdvancedAsciiRenderer',
     supported: true,
-    keyParameters: ['rippleSpeed', 'wavelength', 'waveAmplitude', 'charSet'],
-    config: {
-      mode: 'ascii',
+    supportedParameters: ['rippleSpeed', 'wavelength', 'waveAmplitude', 'charSet'],
+    animationMetadata: { isAnimated: true, type: 'ripple', defaultSpeed: 1.3, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'ripple-ascii',
       renderParams: { cellSize: 10, density: 1.2, coverage: 90, invert: false, edgeEmphasis: 0.2, charSet: ' ı.:|!#' },
       motion: { isPlaying: true, animated: true, speed: 1.3, animSpeed: 1.3, type: 'ripple', animStyle: 'ripple', intensity: 0.85, animIntensity: 0.85, loop: true, frequency: 1.8 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 18: AURA
@@ -370,15 +440,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'abstract',
     tags: ['Bloom', 'Aura', 'Ethereal', 'Glow'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['bloomRadius', 'glowColor', 'lumaThreshold', 'edgeSoftness'],
-    config: {
+    supportedParameters: ['bloomRadius', 'glowColor', 'lumaThreshold', 'edgeSoftness'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 12, density: 1.3, coverage: 95, invert: false, edgeEmphasis: 0.7, charSet: ' .·+*#@' },
       effects: { bloom: 0.75, vignette: 0.45, scanlines: 0, filmGrain: 0.15, chromaticAberration: 0.3, glitch: 0, halftone: 0, pixelation: 0, filmDust: 0 },
       color: { brightness: 15, contrast: 25, saturation: 1.3, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.45, blendMode: 'screen' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 19: earth
@@ -390,14 +465,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Earthy', 'Organic', 'Moss', 'Botanical'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['palette', 'density', 'invert', 'saturation'],
-    config: {
+    supportedParameters: ['palette', 'density', 'invert', 'saturation'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 10, density: 1.4, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: ' .~+oO#@' },
       color: { brightness: -5, contrast: 30, saturation: 1.2, grayscale: false, tintColor: '#4ADE80', tintOpacity: 0.6, blendMode: 'color-dodge' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 20: HandArt
@@ -409,14 +489,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Edge', 'Sobel', 'Hatch', 'Minimalist'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'HatchRenderer',
     supported: true,
-    keyParameters: ['edgeEmphasis', 'charSet', 'invert', 'contrast'],
-    config: {
+    supportedParameters: ['edgeEmphasis', 'charSet', 'invert', 'contrast'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'hatch',
       renderParams: { cellSize: 10, density: 1.3, coverage: 95, invert: true, edgeEmphasis: 0.9, charSet: '/\\|X' },
       color: { brightness: 10, contrast: 40, saturation: 0, grayscale: true, tintColor: '#FAFAFA', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 21: virt
@@ -428,14 +513,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'matrix-terminal',
     tags: ['Obsidian', 'Minimal', 'Terminal', 'Monolith'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AdvancedAsciiRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'coverage', 'charSet', 'contrast'],
-    config: {
-      mode: 'ascii',
+    supportedParameters: ['cellSize', 'coverage', 'charSet', 'contrast'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'virt-ascii',
       renderParams: { cellSize: 16, density: 0.8, coverage: 65, invert: false, edgeEmphasis: 0.1, charSet: ' .:-=+*#%@' },
       color: { brightness: -10, contrast: 45, saturation: 0, grayscale: true, tintColor: '#FFFFFF', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 22: virt (Raw Inverted)
@@ -447,14 +537,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'matrix-terminal',
     tags: ['Brackets', 'Code', 'Raw', 'Inverted'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AdvancedAsciiRenderer',
     supported: true,
-    keyParameters: ['invert', 'density', 'charSet', 'contrast'],
-    config: {
-      mode: 'ascii',
+    supportedParameters: ['invert', 'density', 'charSet', 'contrast'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'virt-ascii',
       renderParams: { cellSize: 11, density: 1.4, coverage: 95, invert: true, edgeEmphasis: 0.4, charSet: '[]{}/\\|()' },
       color: { brightness: 15, contrast: 35, saturation: 0, grayscale: true, tintColor: '#CCFF00', tintOpacity: 0.5, blendMode: 'screen' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 23: Hehe
@@ -466,15 +561,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'abstract',
     tags: ['Glitch', 'Aberration', 'Slice', 'Kinetic'],
     type: 'photo',
-    isAnimated: true,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['glitchIntensity', 'sliceHeight', 'colorShift', 'animSpeed'],
-    config: {
+    supportedParameters: ['glitchIntensity', 'sliceHeight', 'colorShift', 'animSpeed'],
+    animationMetadata: { isAnimated: true, type: 'flicker', defaultSpeed: 1.8, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 8, density: 1.3, coverage: 90, invert: false, edgeEmphasis: 0.5, charSet: ' .:~=!*#' },
       effects: { glitch: 0.65, chromaticAberration: 0.6, scanlines: 0.5, filmGrain: 0.3, bloom: 0.2, vignette: 0.3, halftone: 0, pixelation: 0, filmDust: 0 },
       motion: { isPlaying: true, animated: true, speed: 1.8, animSpeed: 1.8, type: 'flicker', animStyle: 'flicker', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 2.5 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 24: ORAN G
@@ -486,15 +586,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'abstract',
     tags: ['Coral', 'Duotone', 'High-Contrast', 'Brutalist'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['tintColor', 'tintOpacity', 'contrast', 'coverage'],
-    config: {
+    supportedParameters: ['tintColor', 'tintOpacity', 'contrast', 'coverage'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 10, density: 1.5, coverage: 100, invert: false, edgeEmphasis: 0.6, charSet: ' ._:=+*#%@' },
       color: { brightness: 5, contrast: 45, saturation: 1.6, grayscale: false, tintColor: '#FF473A', tintOpacity: 0.85, blendMode: 'normal' },
       background: { mode: 'solid', opacity: 1, blur: 0, blurType: 'gaussian', color: '#08080A' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 25: ASCII Cruex
@@ -506,14 +611,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Crosses', 'Cruciform', 'Grid', 'Anchors'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'GeometricArtifactsRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'coverage', 'thickness', 'invert'],
-    config: {
-      mode: 'crosses',
+    supportedParameters: ['cellSize', 'coverage', 'thickness', 'invert'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'cruciform',
       renderParams: { cellSize: 14, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: '+' },
       color: { brightness: 0, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.7, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 26: City
@@ -525,15 +635,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Skyline', 'Elevation', 'Atmospheric', 'Urban'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AdvancedAsciiRenderer',
     supported: true,
-    keyParameters: ['contrast', 'bandCount', 'charRamp', 'vignette'],
-    config: {
-      mode: 'ascii',
+    supportedParameters: ['contrast', 'bandCount', 'charRamp', 'vignette'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'city-ascii',
       renderParams: { cellSize: 10, density: 1.3, coverage: 95, invert: false, edgeEmphasis: 0.4, charSet: ' _-+=#|[]' },
       effects: { vignette: 0.6, filmGrain: 0.25, scanlines: 0.2, bloom: 0.1, chromaticAberration: 0, glitch: 0, halftone: 0, pixelation: 0, filmDust: 0 },
       color: { brightness: -5, contrast: 30, saturation: 0.8, grayscale: false, tintColor: '#38BDF8', tintOpacity: 0.5, blendMode: 'screen' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 27: Matrix
@@ -545,15 +660,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'matrix-terminal',
     tags: ['Cyber', 'Digital Rain', 'Katakana', 'Phosphor'],
     type: 'photo',
-    isAnimated: true,
+    renderingModule: 'MatrixRainRenderer',
     supported: true,
-    keyParameters: ['animSpeed', 'columnDensity', 'fadeTail', 'charSet'],
-    config: {
+    supportedParameters: ['animSpeed', 'columnDensity', 'fadeTail', 'charSet'],
+    animationMetadata: { isAnimated: true, type: 'wave', defaultSpeed: 1.4, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
       mode: 'matrix-rain',
       renderParams: { cellSize: 12, density: 1.3, coverage: 90, invert: false, edgeEmphasis: 0.3, charSet: '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻ' },
       color: { brightness: 10, contrast: 30, saturation: 1.5, grayscale: false, tintColor: '#22C55E', tintOpacity: 0.9, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.4, animSpeed: 1.4, type: 'wave', animStyle: 'wave', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 1.5 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 28: Metallic
@@ -565,15 +685,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'abstract',
     tags: ['Chrome', 'Specular', 'Metallic', 'Liquid Silver'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'MetallicRenderer',
     supported: true,
-    keyParameters: ['edgeEmphasis', 'specularBoost', 'palette', 'contrast'],
-    config: {
-      mode: 'contour',
+    supportedParameters: ['edgeEmphasis', 'specularBoost', 'palette', 'contrast'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'metallic',
       renderParams: { cellSize: 8, density: 1.4, coverage: 100, invert: false, edgeEmphasis: 0.95, charSet: ' -=+*#' },
       effects: { bloom: 0.55, chromaticAberration: 0.3, filmGrain: 0.2, vignette: 0.3, scanlines: 0, glitch: 0, halftone: 0, pixelation: 0, filmDust: 0 },
       color: { brightness: 10, contrast: 45, saturation: 0, grayscale: true, tintColor: '#FFFFFF', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 29: oVONE
@@ -585,14 +710,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Dots', 'Halftone', 'Rec.709', 'Perceptual'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'DotsRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'coverage', 'density', 'invert'],
-    config: {
+    supportedParameters: ['cellSize', 'coverage', 'density', 'invert'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'dots',
       renderParams: { cellSize: 12, density: 1.3, coverage: 95, invert: false, edgeEmphasis: 0.2, charSet: '·' },
       color: { brightness: 0, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.8, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 30: r ASCII
@@ -604,14 +734,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Micro', 'Ultra-Fine', 'High-Density', 'Photoreal'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['cellSize=4', 'density=1.8', 'contrast=1.2'],
-    config: {
+    supportedParameters: ['cellSize=4', 'density=1.8', 'contrast=1.2'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 5, density: 1.6, coverage: 100, invert: false, edgeEmphasis: 0.4, charSet: ' .:-=+*#%@' },
       color: { brightness: 5, contrast: 30, saturation: 1.1, grayscale: false, tintColor: '#FAFAFA', tintOpacity: 0.2, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 31: a ASCII
@@ -623,14 +758,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'ascii',
     tags: ['Punctuation', 'Airy', 'Minimalist', 'Open Grid'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'AsciiRenderer',
     supported: true,
-    keyParameters: ['charSet', 'coverage', 'cellSize'],
-    config: {
+    supportedParameters: ['charSet', 'coverage', 'cellSize'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'ascii',
       renderParams: { cellSize: 14, density: 0.9, coverage: 65, invert: false, edgeEmphasis: 0, charSet: ' .:+*#' },
       color: { brightness: 0, contrast: 20, saturation: 0.9, grayscale: false, tintColor: '#E2E8F0', tintOpacity: 0.4, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 32: Dither Image / Portrait
@@ -642,15 +782,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['Floyd-Steinberg', 'Portrait', 'Error Diffusion', 'Gradients'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'DitherRenderer',
     supported: true,
-    keyParameters: ['algorithm', 'diffusionWeight', 'contrast'],
-    config: {
+    supportedParameters: ['algorithm', 'diffusionWeight', 'contrast'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'dither',
       renderParams: { cellSize: 4, density: 1.0, coverage: 100, invert: false, edgeEmphasis: 0, charSet: '01' },
       dither: { algorithm: 'floyd-steinberg', scale: 2, threshold: 0.5, colorDepth: 4, paletteId: 'noir-monochrome', serpentine: true },
       color: { brightness: 0, contrast: 30, saturation: 0, grayscale: true, tintColor: '#FFFFFF', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 33: Dither Orb
@@ -662,16 +807,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['Blue Noise', 'Perlin', 'Orb', 'Volumetric'],
     type: 'background',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires 3D procedural sphere noise deformation mesh with blue noise texture sampling (Feature Set A).',
-    keyParameters: ['noiseScale', 'pulseSpeed', 'ditherMatrix', 'radius'],
-    proceduralType: 'dither-orb',
-    config: {
-      mode: 'dither',
+    renderingModule: 'ProceduralFieldRenderer',
+    supported: true,
+    supportedParameters: ['noiseScale', 'pulseSpeed', 'ditherMatrix', 'radius'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 1.2, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'dither-orb',
       renderParams: { cellSize: 8, density: 1.2, coverage: 90, invert: false, edgeEmphasis: 0.4, charSet: '#.' },
+      color: { brightness: 0, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.8, blendMode: 'normal' },
       motion: { isPlaying: true, animated: true, speed: 1.2, animSpeed: 1.2, type: 'pulse', animStyle: 'pulse', intensity: 0.8, animIntensity: 0.8, loop: true, frequency: 1.6 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 34: Ordered Dither Shader
@@ -683,15 +832,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['Bayer 8x8', 'Arcade', 'Matrix', 'Retro Shading'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'DitherRenderer',
     supported: true,
-    keyParameters: ['algorithm', 'thresholdScale', 'palette'],
-    config: {
+    supportedParameters: ['algorithm', 'thresholdScale', 'palette'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'dither',
       renderParams: { cellSize: 6, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: '01' },
       dither: { algorithm: 'bayer-8x8', scale: 2, threshold: 0.5, colorDepth: 4, paletteId: 'cyberpunk-editorial', serpentine: true },
       color: { brightness: 5, contrast: 25, saturation: 1.2, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.5, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 35: Retro CRT 404
@@ -703,18 +857,21 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'matrix-terminal',
     tags: ['CRT', 'Phosphor', 'Scanlines', 'Curvature'],
     type: 'hybrid',
-    isAnimated: true,
-    supported: false,
-    missingFeatureNote: 'Requires non-linear screen barrel distortion [x\', y\'] = f(x,y) fisheye warp (Feature Set D).',
-    keyParameters: ['scanlineIntensity', 'curvature', 'chromaShift', 'flicker'],
-    proceduralType: 'crt-barrel',
-    config: {
-      mode: 'ascii',
-      renderParams: { cellSize: 10, density: 1.1, coverage: 90, invert: false, edgeEmphasis: 0.4, charSet: '01.:#@' },
+    renderingModule: 'CrtPhosphorRenderer',
+    supported: true,
+    supportedParameters: ['scanlineIntensity', 'curvature', 'chromaShift', 'flicker'],
+    animationMetadata: { isAnimated: true, type: 'flicker', defaultSpeed: 1.5, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
+      mode: 'crt-phosphor',
+      renderParams: { cellSize: 10, density: 1.1, coverage: 90, invert: false, edgeEmphasis: 0.35, charSet: '01.:#@' },
       effects: { scanlines: 0.85, chromaticAberration: 0.7, filmGrain: 0.4, bloom: 0.5, vignette: 0.7, glitch: 0.2, halftone: 0, pixelation: 0, filmDust: 0 },
       color: { brightness: 10, contrast: 35, saturation: 1.4, grayscale: false, tintColor: '#22C55E', tintOpacity: 0.85, blendMode: 'screen' },
       motion: { isPlaying: true, animated: true, speed: 1.5, animSpeed: 1.5, type: 'flicker', animStyle: 'flicker', intensity: 0.6, animIntensity: 0.6, loop: true, frequency: 2 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 36: Vaporwave Portrait
@@ -726,15 +883,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'dithering',
     tags: ['Vaporwave', 'Neon Pink', 'Cyan', 'Halftone'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'DotsRenderer',
     supported: true,
-    keyParameters: ['palette', 'halftone', 'vignette'],
-    config: {
+    supportedParameters: ['palette', 'halftone', 'vignette'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'halftone',
       renderParams: { cellSize: 10, density: 1.2, coverage: 95, invert: false, edgeEmphasis: 0.2, charSet: '·' },
       color: { brightness: 10, contrast: 30, saturation: 1.8, grayscale: false, tintColor: '#EC4899', tintOpacity: 0.75, blendMode: 'screen' },
       effects: { bloom: 0.4, vignette: 0.4, filmGrain: 0.2, scanlines: 0.2, chromaticAberration: 0.3, glitch: 0, halftone: 0, pixelation: 0, filmDust: 0 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 37: hi
@@ -746,14 +908,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Micro-Grid', 'Crosshair', 'Gradient', 'Orientation'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'MixedPatternsRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'density', 'orientationSens', 'invert'],
-    config: {
+    supportedParameters: ['cellSize', 'density', 'orientationSens', 'invert'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'mixed-patterns',
       renderParams: { cellSize: 10, density: 1.3, coverage: 95, invert: false, edgeEmphasis: 0.5, charSet: '+·' },
       color: { brightness: 0, contrast: 25, saturation: 1.0, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.6, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 38: Braille Micro-Art
@@ -765,14 +932,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Braille', 'Unicode', 'Sub-Pixel', 'Binary Matrix'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'BrailleRenderer',
     supported: true,
-    keyParameters: ['threshold', 'invert', 'cellSize'],
-    config: {
+    supportedParameters: ['threshold', 'invert', 'cellSize'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'braille',
       renderParams: { cellSize: 8, density: 1.4, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: '⠀⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏' },
       color: { brightness: 0, contrast: 30, saturation: 1.1, grayscale: false, tintColor: '#F4F4F6', tintOpacity: 0.3, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 39: Halfblock Chunky
@@ -784,14 +956,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Halfblock', 'ANSI', 'BBS', 'Chunky Pixel'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'HalfblocksRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'density', 'colorMode'],
-    config: {
+    supportedParameters: ['cellSize', 'density', 'colorMode'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'halfblocks',
       renderParams: { cellSize: 12, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.2, charSet: '▀▄█' },
       color: { brightness: 5, contrast: 25, saturation: 1.3, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.5, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 40: Hexadecimal Byte Dump
@@ -803,14 +980,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'matrix-terminal',
     tags: ['Hex', 'Byte Dump', 'Memory Inspector', 'Binary'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'HexdumpRenderer',
     supported: true,
-    keyParameters: ['cellSize', 'columnCount', 'showOffsets', 'colorTint'],
-    config: {
+    supportedParameters: ['cellSize', 'columnCount', 'showOffsets', 'colorTint'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'hexdump',
       renderParams: { cellSize: 14, density: 1.1, coverage: 100, invert: false, edgeEmphasis: 0, charSet: '0123456789ABCDEF' },
       color: { brightness: 0, contrast: 20, saturation: 0, grayscale: true, tintColor: '#22C55E', tintOpacity: 0.7, blendMode: 'screen' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 41: Iso-Contour Topography
@@ -822,14 +1004,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Contour', 'Topography', 'Marching Squares', 'Cartographic'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'ContourRenderer',
     supported: true,
-    keyParameters: ['bandInterval', 'lineThickness', 'edgeSmoothness'],
-    config: {
+    supportedParameters: ['bandInterval', 'lineThickness', 'edgeSmoothness'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'contour',
       renderParams: { cellSize: 10, density: 1.4, coverage: 95, invert: false, edgeEmphasis: 0.85, charSet: ' -=' },
       color: { brightness: 0, contrast: 35, saturation: 1.2, grayscale: false, tintColor: '#F59E0B', tintOpacity: 0.65, blendMode: 'screen' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 42: Linocut Rings
@@ -841,14 +1028,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Linocut', 'Printmaking', 'Rings', 'Woodblock'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'GeometricArtifactsRenderer',
     supported: true,
-    keyParameters: ['ringSpacing', 'strokeScale', 'coverage'],
-    config: {
-      mode: 'rings',
+    supportedParameters: ['ringSpacing', 'strokeScale', 'coverage'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'linocut-rings',
       renderParams: { cellSize: 14, density: 1.3, coverage: 90, invert: false, edgeEmphasis: 0.4, charSet: 'oO' },
       color: { brightness: 0, contrast: 40, saturation: 0, grayscale: true, tintColor: '#FAFAFA', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 43: Plastic Stud Bricks
@@ -860,14 +1052,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Lego', 'Bricks', 'Modular', 'Toy Plastic'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'LegoRenderer',
     supported: true,
-    keyParameters: ['studRadius', 'blockBevel', 'dropShadow', 'palette'],
-    config: {
+    supportedParameters: ['studRadius', 'blockBevel', 'dropShadow', 'palette'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'lego',
       renderParams: { cellSize: 16, density: 1.0, coverage: 100, invert: false, edgeEmphasis: 0.2, charSet: 'o' },
       color: { brightness: 10, contrast: 30, saturation: 1.5, grayscale: false, tintColor: '#EF4444', tintOpacity: 0.4, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 44: Isometric Voxels
@@ -879,14 +1076,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Voxels', 'Isometric', '3D Blocks', 'Cast Shadows'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'VoxelsRenderer',
     supported: true,
-    keyParameters: ['voxelSize', 'lightAngle', 'shadowDepth'],
-    config: {
+    supportedParameters: ['voxelSize', 'lightAngle', 'shadowDepth'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'voxels',
       renderParams: { cellSize: 16, density: 1.1, coverage: 100, invert: false, edgeEmphasis: 0.5, charSet: '[]' },
       color: { brightness: 5, contrast: 25, saturation: 1.3, grayscale: false, tintColor: '#9D4EDD', tintOpacity: 0.5, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 45: Cross-Stitch Hatch
@@ -898,14 +1100,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Hatch', 'Pencil', 'Cross-Stitch', 'Crosshatch'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'GeometricArtifactsRenderer',
     supported: true,
-    keyParameters: ['hatchAngle', 'lineSpacing', 'density'],
-    config: {
-      mode: 'hatch',
+    supportedParameters: ['hatchAngle', 'lineSpacing', 'density'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'cross-stitch',
       renderParams: { cellSize: 10, density: 1.4, coverage: 100, invert: false, edgeEmphasis: 0.6, charSet: '/\\' },
       color: { brightness: 0, contrast: 30, saturation: 0, grayscale: true, tintColor: '#FAFAFA', tintOpacity: 0, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 46: Disco Dancefloor
@@ -917,15 +1124,20 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'mosaic-pixel',
     tags: ['Disco', 'Audio', 'RGB Cycle', 'Dancefloor'],
     type: 'photo',
-    isAnimated: true,
+    renderingModule: 'DiscoRenderer',
     supported: true,
-    keyParameters: ['animSpeed', 'pulseIntensity', 'glowRadius'],
-    config: {
+    supportedParameters: ['animSpeed', 'pulseIntensity', 'glowRadius'],
+    animationMetadata: { isAnimated: true, type: 'pulse', defaultSpeed: 1.6, loop: true },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 }, thumbnailFps: 30 },
+    defaultConfig: {
       mode: 'disco',
       renderParams: { cellSize: 16, density: 1.2, coverage: 100, invert: false, edgeEmphasis: 0.3, charSet: '■' },
       motion: { isPlaying: true, animated: true, speed: 1.6, animSpeed: 1.6, type: 'pulse', animStyle: 'pulse', intensity: 0.9, animIntensity: 0.9, loop: true, frequency: 2 },
       effects: { bloom: 0.45, scanlines: 0.25, chromaticAberration: 0.4, glitch: 0.1, vignette: 0.3, filmGrain: 0.1, halftone: 0, pixelation: 0, filmDust: 0 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 47: Heart Pixel Stipple
@@ -937,14 +1149,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Hearts', 'Romance', 'Polygons', 'Vector Stipple'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'HeartsRenderer',
     supported: true,
-    keyParameters: ['coverage', 'cellSize', 'invert'],
-    config: {
+    supportedParameters: ['coverage', 'cellSize', 'invert'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
       mode: 'hearts',
       renderParams: { cellSize: 14, density: 1.2, coverage: 95, invert: false, edgeEmphasis: 0.2, charSet: '♥' },
       color: { brightness: 10, contrast: 30, saturation: 1.5, grayscale: false, tintColor: '#F43F5E', tintOpacity: 0.75, blendMode: 'normal' },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 
   // 48: Star Halftone Constellation
@@ -956,14 +1173,19 @@ export const COMMUNITY_RECIPES: CommunityRecipe[] = [
     category: 'geometric',
     tags: ['Stars', 'Constellation', 'Halftone', 'Astral'],
     type: 'photo',
-    isAnimated: false,
+    renderingModule: 'GeometricArtifactsRenderer',
     supported: true,
-    keyParameters: ['rayCount', 'coverage', 'density', 'invert'],
-    config: {
-      mode: 'stars',
+    supportedParameters: ['rayCount', 'coverage', 'density', 'invert'],
+    animationMetadata: { isAnimated: false, type: 'none', defaultSpeed: 0, loop: false },
+    previewConfig: { samplePhotoId: 'marble-sculpture', targetResolution: { width: 360, height: 240 } },
+    defaultConfig: {
+      mode: 'constellation',
       renderParams: { cellSize: 14, density: 1.3, coverage: 95, invert: false, edgeEmphasis: 0.4, charSet: '✦' },
       color: { brightness: 10, contrast: 35, saturation: 1.3, grayscale: false, tintColor: '#CCFF00', tintOpacity: 0.8, blendMode: 'screen' },
       effects: { bloom: 0.5, vignette: 0.4, filmGrain: 0.2, scanlines: 0, chromaticAberration: 0.2, glitch: 0, halftone: 0, pixelation: 0, filmDust: 0 },
     },
+    get config() { return this.defaultConfig; },
+    get isAnimated() { return this.animationMetadata.isAnimated; },
+    get keyParameters() { return this.supportedParameters; },
   },
 ];
