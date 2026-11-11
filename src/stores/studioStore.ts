@@ -15,6 +15,7 @@ import {
   LightPoint,
   MaskConfig,
   CentralRecipe,
+  ArtPreset,
 } from '../types';
 import { SidebarTab, StudioImageAsset } from '../types/studio';
 import { createSamplePhotoImage } from '../utilities/samplePhotos';
@@ -329,6 +330,7 @@ interface StudioState {
   loadRecipe: (recipe: CentralRecipe, preloadSampleIfNoImage?: boolean) => Promise<void>;
   resetToRecipeDefaults: () => void;
   clearActiveRecipe: () => void;
+  applyPreset: (preset: ArtPreset, preloadSampleIfNoImage?: boolean) => Promise<void>;
 
   setSplitPosition: (pos: number) => void;
 }
@@ -508,6 +510,31 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     try {
       localStorage.removeItem('pixelmuse_active_recipe_id');
     } catch {}
+  },
+
+  applyPreset: async (preset, preloadSampleIfNoImage = true) => {
+    get().pushHistory();
+    get().updateConfig(preset.config);
+    get().setProjectName(preset.title.toUpperCase().replace(/\s+/g, '_'));
+
+    if (!get().sourceImage && preloadSampleIfNoImage) {
+      try {
+        set({ isImageLoading: true, uploadError: null });
+        const sampleId = 'marble-sculpture';
+        const sample = await createSamplePhotoImage(sampleId);
+        get().setSourceImage(sample, {
+          name: `${preset.title.toLowerCase().replace(/\s+/g, '-')}.png`,
+          width: 640,
+          height: 640,
+          aspectRatio: 1,
+          sizeBytes: 120000,
+        });
+      } catch (err) {
+        console.error('[PixelMuse Preset Sample Load Error]:', err);
+      } finally {
+        set({ isImageLoading: false });
+      }
+    }
   },
 
   setMode: (mode) => {
