@@ -473,24 +473,38 @@ export const InspectorPanel: React.FC = () => {
         >
           {/* Active Palette Picker */}
           <div className="space-y-2">
-            <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
-              Studio Palette
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="font-mono text-2xs uppercase tracking-widest text-obsidian-muted">
+                Studio Palette
+              </label>
+              {(config.mode === 'ascii' || config.mode.includes('ascii')) && config.ascii.colorMode === 'palette' && (
+                <span className="font-mono text-[9px] uppercase tracking-wider text-acid-lime bg-acid-lime/10 px-1.5 py-0.5 border border-acid-lime/30 rounded-xs flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-acid-lime animate-pulse" />
+                  Active on Canvas
+                </span>
+              )}
+            </div>
             <div className="space-y-1.5">
               {BUILTIN_PALETTES.map((pal) => {
                 const isSelected = config.palette.id === pal.id;
                 return (
                   <button
                     key={pal.id}
-                    onClick={() => setPalette(pal)}
+                    onClick={() => {
+                      setPalette(pal);
+                      updateAsciiConfig({ colorMode: 'palette' });
+                    }}
                     className={cn(
-                      'w-full p-2 text-left border rounded-xs transition-all flex items-center justify-between',
+                      'w-full p-2 text-left border rounded-xs transition-all flex items-center justify-between cursor-pointer',
                       isSelected
-                        ? 'border-acid-lime bg-obsidian-950'
+                        ? 'border-acid-lime bg-acid-lime/10 shadow-[0_0_10px_rgba(204,255,0,0.15)]'
                         : 'border-obsidian-border bg-obsidian-950 hover:border-obsidian-border-hover'
                     )}
                   >
-                    <span className="font-mono text-2xs uppercase text-white font-medium">
+                    <span className={cn(
+                      'font-mono text-2xs uppercase font-medium',
+                      isSelected ? 'text-acid-lime font-bold' : 'text-white'
+                    )}>
                       {pal.name}
                     </span>
                     <div className="flex h-2.5 w-16 border border-obsidian-border overflow-hidden">

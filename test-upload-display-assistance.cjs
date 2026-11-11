@@ -114,6 +114,25 @@ assert(
   'TimelineBar provides helpful hover tooltips across playback, rewind, loop, and scrub controls'
 );
 
+// 5. REQUIREMENT 5: # COLOR SECTION CONNECTIVITY & PALETTE SWITCHING
+console.log('\n[REQUIREMENT 5: # Color Section Functionality & Palette Switching]');
+assert(
+  studioStoreContent.includes("setPalette: (palette) =>") &&
+  studioStoreContent.includes("colorMode: 'palette'"),
+  'setPalette in studioStore activates palette colorMode so choosing any Studio Palette immediately drives the artwork'
+);
+assert(
+  asciiRendererContent.includes("applyTintToRgb") &&
+  asciiRendererContent.includes("colorMode === 'palette'") &&
+  asciiRendererContent.includes("color?.tintOpacity"),
+  'AsciiRenderer integrates full Studio Palette color mapping and applies Chromatic Tint equations across glyphs'
+);
+assert(
+  inspectorContent.includes("Active on Canvas") &&
+  inspectorContent.includes("updateAsciiConfig({ colorMode: 'palette' })"),
+  'InspectorPanel highlights active palette with Active on Canvas badge and switches colorMode to palette on click'
+);
+
 console.log('\n================================================================');
 console.log(`TOTAL CHECKS: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
 console.log('================================================================\n');

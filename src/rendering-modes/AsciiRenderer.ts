@@ -2,6 +2,7 @@ import { BaseRenderer } from './BaseRenderer';
 import { RenderConfig, RenderMode } from '../types';
 import { CellGridSampler } from '../image-processing/CellGridSampler';
 import { MotionEcosystem } from '../animation-engine';
+import { clamp, hexToRgb } from '../utilities';
 
 export const ASCII_GLYPH_PRESETS = [
   { id: 'standard', name: 'Standard Density', chars: ' .:-=+*#%@' },
@@ -21,7 +22,7 @@ export class AsciiRenderer extends BaseRenderer {
     config: RenderConfig,
     time: number
   ): void {
-    const { renderParams, ascii, motion, palette } = config;
+    const { renderParams, ascii, motion, palette, color } = config;
     const { cellSize = 12, density = 1.0, invert = false, edgeEmphasis = 0, charSet } = renderParams || {};
 
     const rawChars = charSet || ascii?.characters || ' .:-=+*#%@';
@@ -47,6 +48,61 @@ export class AsciiRenderer extends BaseRenderer {
     const colorMode = ascii?.colorMode || 'original';
     const monoColor = ascii?.monochromeColor || '#CCFF00';
 
+    // Helper to apply chromatic tint & overlay blend equation to any RGB color
+    const applyTintToRgb = (baseR: number, baseG: number, baseB: number): string => {
+      if (!color?.tintOpacity || color.tintOpacity <= 0 || !color.tintColor) {
+        return `rgb(${baseR}, ${baseG}, ${baseB})`;
+      }
+      const tint = hexToRgb(color.tintColor);
+      const alpha = clamp(color.tintOpacity, 0, 1);
+      const tr = tint.r;
+      const tg = tint.g;
+      const tb = tint.b;
+
+      let bR = baseR;
+      let bG = baseG;
+      let bB = baseB;
+
+      switch (color.blendMode) {
+        case 'multiply':
+          bR = (baseR * tr) / 255;
+          bG = (baseG * tg) / 255;
+          bB = (baseB * tb) / 255;
+          break;
+        case 'screen':
+          bR = 255 - ((255 - baseR) * (255 - tr)) / 255;
+          bG = 255 - ((255 - baseG) * (255 - tg)) / 255;
+          bB = 255 - ((255 - baseB) * (255 - tb)) / 255;
+          break;
+        case 'overlay':
+          bR = baseR < 128 ? (2 * baseR * tr) / 255 : 255 - (2 * (255 - baseR) * (255 - tr)) / 255;
+          bG = baseG < 128 ? (2 * baseG * tg) / 255 : 255 - (2 * (255 - baseG) * (255 - tg)) / 255;
+          bB = baseB < 128 ? (2 * baseB * tb) / 255 : 255 - (2 * (255 - baseB) * (255 - tb)) / 255;
+          break;
+        case 'color-dodge':
+          bR = tr === 255 ? 255 : Math.min(255, (baseR * 255) / (255 - tr));
+          bG = tg === 255 ? 255 : Math.min(255, (baseG * 255) / (255 - tg));
+          bB = tb === 255 ? 255 : Math.min(255, (baseB * 255) / (255 - tb));
+          break;
+        case 'difference':
+          bR = Math.abs(baseR - tr);
+          bG = Math.abs(baseG - tg);
+          bB = Math.abs(baseB - tb);
+          break;
+        case 'normal':
+        default:
+          bR = tr;
+          bG = tg;
+          bB = tb;
+          break;
+      }
+
+      const finalR = clamp(Math.round(baseR * (1 - alpha) + bR * alpha), 0, 255);
+      const finalG = clamp(Math.round(baseG * (1 - alpha) + bG * alpha), 0, 255);
+      const finalB = clamp(Math.round(baseB * (1 - alpha) + bB * alpha), 0, 255);
+      return `rgb(${finalR}, ${finalG}, ${finalB})`;
+    };
+
     for (let i = 0; i < grid.cells.length; i++) {
       const cell = grid.cells[i];
       let { r, g, b, luminance, edge, x, y, width, height } = cell;
@@ -70,21 +126,30 @@ export class AsciiRenderer extends BaseRenderer {
         const boostR = Math.max(38, r);
         const boostG = Math.max(38, g);
         const boostB = Math.max(38, b);
-        ctx.fillStyle = `rgb(${boostR}, ${boostG}, ${boostB})`;
+        ctx.fillStyle = applyTintToRgb(boostR, boostG, boostB);
       } else if (colorMode === 'palette' && palette?.colors && palette.colors.length > 0) {
-        // Filter out pitch-black colors to avoid invisible text on black background
-        const activeColors = palette.colors.filter(c => c !== '#000000' && c !== '#08080A' && c !== '#050505');
+        // Filter out absolute blacks (total brightness < 20) to ensure text legibility on obsidian canvas
+        const activeColors = palette.colors.filter(c => {
+          const rgb = hexToRgb(c);
+          return (rgb.r + rgb.g + rgb.b) > 20;
+        });
         const usableColors = activeColors.length > 0 ? activeColors : palette.colors;
-        const palIdx = Math.min(usableColors.length - 1, Math.floor(luminance * usableColors.length));
-        ctx.fillStyle = usableColors[palIdx];
+        const palIdx = Math.min(usableColors.length - 1, Math.max(0, Math.floor(luminance * usableColors.length)));
+        const palRgb = hexToRgb(usableColors[palIdx]);
+        // Shadow boost for dark palette swatches so text is always legible
+        const boostR = Math.max(35, palRgb.r);
+        const boostG = Math.max(35, palRgb.g);
+        const boostB = Math.max(35, palRgb.b);
+        ctx.fillStyle = applyTintToRgb(boostR, boostG, boostB);
       } else {
         // Monochrome terminal (Acid Lime / Amber / Cyan / White) with luminance-weighted brightness
-        ctx.fillStyle = monoColor;
+        const monoRgb = hexToRgb(monoColor);
+        ctx.fillStyle = applyTintToRgb(monoRgb.r, monoRgb.g, monoRgb.b);
       }
 
       // Edge emphasis brightness boost
       if (edgeEmphasis > 0 && edge > 0.25) {
-        ctx.fillStyle = '#CCFF00';
+        ctx.fillStyle = colorMode === 'palette' && palette?.colors ? palette.colors[palette.colors.length - 1] : '#CCFF00';
       }
 
       const alphaMod = motionOffset?.alphaMod ?? 1;

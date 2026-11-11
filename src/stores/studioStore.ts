@@ -764,7 +764,16 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
 
   setPalette: (palette) =>
-    set((state) => ({ config: { ...state.config, palette } })),
+    set((state) => ({
+      config: {
+        ...state.config,
+        palette,
+        ascii: {
+          ...state.config.ascii,
+          colorMode: 'palette',
+        },
+      },
+    })),
 
   resetRenderSection: () => {
     get().pushHistory();
